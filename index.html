@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Supervisi LPI">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Aplikasi Supervisi LPI Sabilillah Malang</title>
+    <link id="pwa-manifest" rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://i.ibb.co/HTKMs1Q7/LPI-3-10-New.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="https://i.ibb.co/HTKMs1Q7/LPI-3-10-New.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/HTKMs1Q7/LPI-3-10-New.png">
+    <meta name="theme-color" content="#1d4ed8">
+    
+    <!-- Pustaka Eksternal (Fonts & Icons) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    
+    <!-- Pustaka Pihak Ketiga (Chart & Export) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #3b82f6; --primary-hover: #2563eb; --primary-light: #eff6ff;
+            --accent: #d4af37; --bg-color: #f8fafc;
+            --surface: rgba(255, 255, 255, 0.95); --surface-solid: #ffffff;
+            --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+            --danger: #ef4444; --success: #10b981;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            --glass-blur: blur(24px); --radius: 1rem;
+            --font-display: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); -webkit-tap-highlight-color: transparent; }
+        html { -webkit-text-size-adjust: 100%; }
+
+        .material-icons-round {
+            font-family: 'Material Symbols Rounded'; font-weight: normal; font-style: normal; font-size: 24px;
+            line-height: 1; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr;
+            -webkit-font-smoothing: antialiased; font-variation-settings: 'FILL' 0, 'wght' 480, 'GRAD' 0, 'opsz' 24;
+        }
+        .nav-item.active .material-icons-round, .btn-primary .material-icons-round, .toast .material-icons-round { font-variation-settings: 'FILL' 1, 'wght' 560; }
+
+        body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
+
+        #app-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; background: var(--bg-color); z-index: 99999; display: flex; overflow: hidden; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
+        .text-sm { font-size: 0.875rem; } .text-xs { font-size: 0.75rem; } .text-muted { color: var(--text-muted); } .font-semibold { font-weight: 600; } .font-bold { font-weight: 800; font-family: var(--font-display); }
+        .flex { display: flex; } .flex-col { display: flex; flex-direction: column; } .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; } .gap-4 { gap: 1rem; } .w-full { width: 100%; } .hidden { display: none !important; }
+
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1.35rem; border-radius: 0.7rem; border: 1px solid transparent; font-family: var(--font-display); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.22); }
+        .btn-outline { background: #ffffff; border: 1px solid #dbe1ec; color: #334155; }
+        .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .btn-danger { background: var(--danger); color: white; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.22); }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-icon { padding: 0.5rem; border-radius: 0.6rem; }
+        .btn-expandable { gap: 0; overflow: hidden; padding: 0.6rem; border-radius: 2rem; transition: all 0.4s; min-width: 42px; height: 42px; }
+        .btn-expandable.expanded { padding: 0.6rem 1.25rem; gap: 0.4rem; }
+        .btn-expandable .expandable-text { max-width: 0; opacity: 0; white-space: nowrap; transition: all 0.4s; font-weight: 600; font-size: 0.875rem; }
+        .btn-expandable.expanded .expandable-text { max-width: 150px; opacity: 1; }
+
+        .form-group { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+        label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        input, select, textarea { width: 100%; padding: 0.85rem 1rem; border-radius: 0.75rem; border: 1px solid #cbd5e1; background: #ffffff; font-size: 0.95rem; color: var(--text-main); outline: none; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        input[readonly], input:disabled { background: #f1f5f9; color: #64748b; cursor: not-allowed; border-color: #e2e8f0; }
+        
+        .compact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; } .compact-row > * { min-width: 0; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem; }
+
+        .card { background: var(--surface); backdrop-filter: var(--glass-blur); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); transition: transform 0.25s, box-shadow 0.25s; width: 100%; box-sizing: border-box; }
+        .card:hover { box-shadow: var(--shadow-lg); }
+
+        #toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 1000000; display: flex; flex-direction: column; gap: 0.6rem; }
+        .toast { background: var(--surface-solid); padding: 0.9rem 1.1rem; border-radius: 0.85rem; box-shadow: var(--shadow-lg); border-left: 3px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; min-width: 250px; animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        #custom-modal-overlay, #custom-edit-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px); z-index: 999999; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.3s ease; }
+        #custom-modal-overlay.hidden, #custom-edit-modal-overlay.hidden { opacity: 0; pointer-events: none; }
+        .modal-box { 
+            background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.85));
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 1.5rem; 
+            padding: 2rem; width: 100%; max-width: 420px; 
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15), inset 0 2px 4px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.02); 
+            transform: scale(1) translateY(0); 
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+        #custom-modal-overlay.hidden .modal-box, #custom-edit-modal-overlay.hidden .modal-box { transform: scale(0.9) translateY(20px); }
+
+        .skeleton-row { animation: shimmer 1.5s infinite linear; background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%); background-size: 1000px 100%; height: 20px; border-radius: 4px; display: inline-block; width: 100%; }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+
+        .empty-state { padding: 3rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .empty-state i { font-size: 4rem; color: #cbd5e1; } .empty-state p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid var(--border); }
+        .pagination-info { font-size: 0.875rem; color: var(--text-muted); } .pagination-controls { display: flex; gap: 0.5rem; }
+        
+        .chart-container { position: relative; height: 300px; width: 100%; margin-top: 1rem; }
+
+        .table-container { overflow-x: auto; background: var(--surface-solid); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem 1.1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+        th { background: #f8fafc; font-family: var(--font-display); font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; }
+        tr:hover td { background: var(--primary-light); }
+        
+        /* Tombol Aksi Tabel */
+        .action-group { display: flex; gap: 0.25rem; }
+        .btn-action { padding: 0.45rem; border-radius: 0.5rem; background: transparent; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-action:hover { background: #e2e8f0; }
+        .btn-action.view { color: var(--primary); }
+        .btn-action.edit { color: #d97706; }
+        .btn-action.delete { color: var(--danger); }
+
+        /* Table Responsive */
+        .table-container { 
+            overflow-x: auto; background: var(--surface-solid); border-radius: var(--radius); 
+            border: 1px solid var(--border); box-shadow: var(--shadow); 
+            -webkit-overflow-scrolling: touch; /* Scroll horizontal mulus di HP */
+        }
+        table { width: 100%; border-collapse: collapse; }
+        #table-rekap, #table-cetak { min-width: 900px; } /* Mencegah kolom tergencet berantakan di mobile */
+        th, td { padding: 1rem 1.1rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.875rem; vertical-align: middle; }
+        th { 
+            background: #f8fafc; font-family: var(--font-display); font-weight: 800; 
+            color: #475569; text-transform: uppercase; font-size: 0.75rem; 
+            letter-spacing: 0.05em; border-bottom: 2px solid #cbd5e1; white-space: nowrap; 
+        }
+        tr:hover td { background: #f8fafc; }
+        
+        /* Tambahan styling khusus elemen dalam tabel Data Supervisi agar elegan */
+        .badge-spv { background: #e0e7ff; color: var(--primary); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
+        .badge-waktu { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .badge-temuan { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; display: inline-block; }
+
+        /* Dashboard Hero */
+        .dash-hero { background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%); border-radius: 1.5rem; padding: 1.5rem; color: white; position: relative; margin-bottom: 1.5rem; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3); }
+        .dash-hero-header { margin-bottom: 1.25rem; }
+        .hero-top-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+        .user-info-group { display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1; }
+        .user-greeting-text { min-width: 0; flex: 1; }
+        .user-greeting-name { font-size: 1rem; font-weight: 700; color: #ffffff; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-greeting-school { font-size: 0.82rem; font-weight: 500; color: rgba(255, 255, 255, 0.88); margin-top: 2px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .avatar-circle { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .dash-hero-card { background: white; border-radius: 1.25rem; padding: 1.25rem; box-shadow: 0 10px 20px rgba(0,0,0,0.06); position: relative; z-index: 2; margin-top: 1rem; }
+        .progress-circle { width: 52px; height: 52px; border-radius: 50%; border: 4px solid #fecdd3; border-top-color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--accent); flex-shrink: 0; }
+        
+        @media (max-width: 768px) {
+            .dash-hero { border-radius: 0 0 1.5rem 1.5rem; margin: -1rem -1rem 1.25rem -1rem; padding: 1.25rem 1rem 1.25rem 1rem; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2); }
+            .dash-hero-header { margin-bottom: 0.85rem; }
+            .hero-top-bar { margin-bottom: 0.65rem; }
+            .dash-hero-card { padding: 1rem; border-radius: 1rem; margin-top: 0.75rem; }
+            .stat-row-mobile { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 0.75rem !important; margin-top: 1rem !important; margin-bottom: 1.25rem !important; }
+        }
+
+        /* Media Queries Tablet (769px - 1024px): merapikan layout 2 kolom agar tidak sempit */
+
+        #sidebar { width: 264px; height: 100%; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: all 0.3s; z-index: 100; }
+        .nav-header { padding: 1.6rem 1.5rem; border-bottom: 1px solid var(--border); }
+        .nav-header .brand { display: flex; align-items: center; gap: 0.75rem; }
+        .nav-header h2 { font-size: 1.05rem; color: var(--text-main); }
+        .nav-header .brand-sub { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; }
+        .nav-menu { padding: 1rem 0.75rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.15rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 600; cursor: pointer; border-radius: 0.75rem; transition: all 0.2s; }
+        .nav-item:hover, .nav-item.active { color: var(--primary); background: var(--primary-light); }
+        .user-profile { padding: 1.1rem; border-top: 1px solid var(--border); }
+        
+        #main-content { flex: 1; height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; background: var(--bg-color); max-width: 100%; }
+        .page-view { padding: 2rem; max-width: 1200px; margin: 0 auto; display: none; width: 100%; box-sizing: border-box; }
+        .page-view.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-header { background: linear-gradient(to right, #ffffff, #f8fafc); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .page-title { font-size: 1.5rem; color: var(--text-main); }
+
+        #login-view { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: #ffffff; padding: 1rem; }
+        #login-bg-top { position: absolute; top: 0; left: 0; right: 0; height: 35vh; background: linear-gradient(135deg, var(--primary), var(--primary-hover)); border-bottom-left-radius: 2.5rem; border-bottom-right-radius: 2.5rem; z-index: 0; }
+        .login-box { width: 100%; max-width: 400px; z-index: 1; background: #ffffff; border-radius: 1.5rem; padding: 2rem; border: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        .login-header { margin-bottom: 2rem; }
+        .login-title { font-size: 1.6rem; font-weight: 800; color: var(--text-main); line-height: 1.2; margin-bottom: 0.5rem; }
+        .login-subtitle { font-size: 0.9rem; color: var(--text-muted); }
+        .login-tabs { display: flex; gap: 0.5rem; background: #f1f5f9; padding: 0.35rem; border-radius: 1rem; margin-bottom: 1.5rem; }
+        .login-tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; font-weight: 700; font-size: 0.85rem; color: var(--text-muted); border-radius: 0.75rem; transition: 0.2s; }
+        .login-tab.active { color: var(--primary); background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .login-form { display: none; } .login-form.active { display: block; }
+        .input-with-icon { position: relative; display: flex; align-items: center; width: 100%; }
+        .input-with-icon > .material-icons-round { position: absolute; left: 1rem; color: #94a3b8; font-size: 1.25rem; pointer-events: none; z-index: 2; }
+        .input-with-icon input { width: 100%; padding-left: 2.75rem; padding-right: 2.75rem; background: #f8fafc; border-radius: 1rem; border: 1px solid #e2e8f0; height: 46px; outline: none; transition: all 0.2s; }
+        .input-with-icon input:focus { background: #ffffff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .password-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
+        .toggle-password { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0.35rem; border-radius: 0.5rem; z-index: 2; transition: color 0.2s; }
+        .toggle-password:hover { color: var(--primary); }
+        .toggle-password .material-icons-round { position: static !important; left: auto !important; font-size: 1.2rem; }
+        
+        @media (min-width: 769px) {
+            #login-view { background: #f8fafc; }
+            #login-bg-top { height: 40vh; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+            .login-box { box-shadow: var(--shadow-lg); padding: 2.5rem; }
+        }
+
+        .pertemuan-list { display: flex; flex-direction: column; gap: 1rem; }
+        .pertemuan-item { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 0.75rem; padding: 1.25rem; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+
+        /* Styling Kotak Border & Warna Judul Section (Dashboard & Views) */
+        .section-header-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0 0 0.65rem 0 !important;
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .section-header-box.blue { border-bottom-color: #bae6fd !important; }
+        .section-header-box.emerald { border-bottom-color: #bbf7d0 !important; }
+        .section-header-box.amber { border-bottom-color: #fde68a !important; }
+        .section-header-box.slate { border-bottom-color: #cbd5e1 !important; }
+        .section-header-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-header-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+        .section-header-icon.blue { background: #0284c7; }
+        .section-header-icon.emerald { background: #16a34a; }
+        .section-header-icon.amber { background: #d97706; }
+        .section-header-icon.slate { background: #475569; }
+        .section-header-title h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: #1e293b !important;
+        }
+
+        @media (min-width: 1025px) { #sidebar.collapsed-desktop { margin-left: -264px; } }
+        @media (max-width: 1024px) and (min-width: 769px) { #sidebar.collapsed-desktop { margin-left: -220px; } }
+        @media (max-width: 768px) { .hidden-mobile { display: none !important; } }
+
+        .mobile-only { display: none !important; }
+        @media (max-width: 1024px) and (min-width: 769px) { #sidebar { width: 220px; } .page-view { padding: 1.5rem; } .compact-row, .form-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            .mobile-only { display: flex !important; }
+            #app-container { flex-direction: column; }
+            #sidebar { width: 100%; height: auto; position: fixed; bottom: 0; left: 0; z-index: 150; flex-direction: row; border-top: 1px solid var(--border); padding: 0; justify-content: center; background: var(--surface-solid); }
+            .nav-header, .user-profile { display: none; }
+            .nav-menu { display: flex; flex-direction: row; width: 100%; justify-content: space-around; padding: 0.4rem 0; overflow-x: auto; gap: 0; }
+            .nav-item { flex: 1; flex-direction: column; padding: 0.75rem 0; gap: 0; border: none; text-align: center; min-width: 50px; min-height: 50px; justify-content: center; }
+            .nav-item i { font-size: 1.75rem; margin-bottom: 0; }
+            .nav-item.active { background: rgba(79, 70, 229, 0.1); border-radius: 0.5rem; margin: 0 0.2rem; }
+            .nav-item span { display: none !important; }
+            #main-content { margin-bottom: calc(70px + env(safe-area-inset-bottom, 0)); }
+            .page-view { padding: 1rem; } .compact-row, .form-grid { grid-template-columns: 1fr; gap: 1rem; }
+            th, td { padding: 0.75rem 0.85rem; font-size: 0.82rem; } #toast-container { top: 0.75rem; right: 0.75rem; left: 0.75rem; align-items: flex-end; } .toast { width: 100%; max-width: 320px; }
+        }
+
+        /* MEDIA PRINT UNTUK KERTAS A4 LANDSCAPE (FOKUS HANYA PADA AREA CETAK) */
+        @media print {
+            @page { 
+                size: A4 landscape; 
+                margin: 10mm; 
+            }
+            body * { 
+                visibility: hidden !important; 
+            }
+            #print-area, #print-area * { 
+                visibility: visible !important; 
+            }
+            #print-area { 
+                position: absolute !important; 
+                left: 0 !important; 
+                top: 0 !important; 
+                width: 100% !important; 
+                display: block !important; 
+                background: white !important; 
+                color: black !important; 
+                box-shadow: none !important; 
+                border: none !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+            }
+            .hide-on-print, .hide-on-print * { 
+                display: none !important; 
+                visibility: hidden !important; 
+            }
+            #sidebar, #login-view, .page-header, .nav-menu, #toast-container, .btn, .pagination-container { 
+                display: none !important; 
+            }
+            
+            #table-cetak { 
+                border: 1px solid black !important; 
+                border-collapse: collapse !important; 
+                width: 100% !important; 
+                font-family: "Times New Roman", Times, serif !important; 
+                font-size: 11pt !important; 
+                line-height: 1.2 !important; 
+            }
+            #table-cetak th, #table-cetak td { 
+                border: 1px solid black !important; 
+                padding: 5px !important; 
+                color: black !important; 
+            }
+            #table-cetak th { 
+                background: #f1f5f9 !important; 
+                font-weight: bold !important; 
+                text-align: center !important; 
+            }
+            
+            #print-signature { 
+                display: flex !important; 
+                justify-content: space-between !important; 
+                margin-top: 2.5rem !important; 
+                font-family: "Times New Roman", Times, serif !important; 
+                font-size: 11pt !important; 
+                page-break-inside: avoid !important; 
+            }
+        }
+        #print-signature { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div id="custom-modal-overlay" class="hidden">
+    <div class="modal-box" style="text-align: center; padding: 2.5rem 2rem;">
+        <div id="modal-icon-container" style="background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); color: #dc2626; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), 0 8px 20px rgba(220,38,38,0.25), 0 0 0 4px rgba(254,242,242,0.8); border: 1px solid rgba(255,255,255,0.8);">
+            <i class="material-icons-round" id="modal-icon" style="font-size: 2.75rem; text-shadow: 0 2px 4px rgba(220,38,38,0.3);">delete_outline</i>
+        </div>
+        <h3 id="modal-title" style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem;">Konfirmasi</h3>
+        <p id="modal-msg" class="text-muted" style="margin-bottom: 2rem; line-height: 1.6; font-size: 0.95rem;"></p>
+        <div class="flex justify-center gap-3 w-full">
+            <button id="btn-modal-cancel" class="btn btn-outline" style="flex: 1; padding: 0.75rem; font-weight: 600;">Batal</button>
+            <button id="btn-modal-confirm" class="btn btn-danger" style="flex: 1; padding: 0.75rem; font-weight: 600;">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
+<div id="custom-edit-modal-overlay" class="hidden">
+    <div class="modal-box" style="padding: 1.75rem 2rem; text-align: left; max-width: 440px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+            <h3 id="edit-modal-title" style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Edit Data</h3>
+            <button class="btn-action" type="button" onclick="document.getElementById('custom-edit-modal-overlay').classList.add('hidden')" style="border:none; background:transparent; cursor:pointer;"><i class="material-icons-round">close</i></button>
+        </div>
+        <form id="form-custom-edit" onsubmit="event.preventDefault();">
+            <div id="edit-modal-body" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;"></div>
+            <div class="flex justify-end gap-2" style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('custom-edit-modal-overlay').classList.add('hidden')">Batal</button>
+                <button type="submit" id="btn-edit-modal-save" class="btn btn-primary"><i class="material-icons-round" style="font-size: 1.1rem; margin-right: 4px;">save</i> Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="app-container">
+    
+    <div id="login-view">
+        <div id="login-bg-top"></div>
+        <div class="login-box">
+            <div class="login-header">
+                <!-- Menggunakan Logo Eksternal -->
+                <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+                    <img src="https://i.ibb.co/HTKMs1Q7/LPI-3-10-New.png" alt="Logo LPI Sabilillah" style="height: 64px; object-fit: contain;">
+                </div>
+                <h2 class="login-title" style="text-align: center;">Selamat datang,</h2>
+                <h2 class="login-title" style="text-align: center; font-size: 1.4rem;">di Sistem Supervisi</h2>
+                <p class="login-subtitle" style="text-align: center; margin-top: 0.5rem;">Masukan Username & Password kamu</p>
+            </div>
+
+            <div class="login-tabs">
+                <div class="login-tab active" onclick="switchLoginTab('user', event)">User (Sekolah)</div>
+                <div class="login-tab" onclick="switchLoginTab('admin', event)">Admin (Pusat)</div>
+            </div>
+
+            <form id="form-user" class="login-form active" onsubmit="event.preventDefault(); handleUserLogin();">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <div class="input-with-icon">
+                        <i class="material-icons-round">person_outline</i>
+                        <input type="text" id="login-user-id" placeholder="Masukan Username">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <div class="input-with-icon password-wrapper">
+                        <i class="material-icons-round">lock_outline</i>
+                        <input type="password" id="login-user-pass" placeholder="Masukan Password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('login-user-pass', this)" title="Tampilkan Sandi"><i class="material-icons-round" style="font-size: 1.2rem;">visibility</i></button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full" style="padding: 0.85rem; border-radius: 1rem; font-size: 1rem;">Login</button>
+            </form>
+
+            <form id="form-admin" class="login-form" onsubmit="event.preventDefault(); handleAdminLogin();">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <div class="input-with-icon">
+                        <i class="material-icons-round">mail_outline</i>
+                        <input type="email" id="login-admin-email" placeholder="Masukan Email Admin">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <div class="input-with-icon password-wrapper">
+                        <i class="material-icons-round">lock_outline</i>
+                        <input type="password" id="login-admin-pass" placeholder="Masukan Password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('login-admin-pass', this)" title="Tampilkan Sandi"><i class="material-icons-round" style="font-size: 1.2rem;">visibility</i></button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full" style="padding: 0.85rem; border-radius: 1rem; font-size: 1rem;">Login</button>
+            </form>
+        </div>
+    </div>
+    
+    <nav id="sidebar" class="hidden">
+        <div class="nav-header">
+            <div class="brand">
+                <!-- Logo di Navigasi -->
+                <img src="https://i.ibb.co/HTKMs1Q7/LPI-3-10-New.png" alt="Logo" style="height: 45px; width: 45px; object-fit: contain; border-radius: 0.4rem;">
+                <div><h2>Supervisi</h2><div class="brand-sub">LPIS Malang</div></div>
+            </div>
+        </div>
+        <div class="nav-menu">
+            <a class="nav-item active" data-target="dashboard" onclick="navigate('dashboard')"><i class="material-icons-round">dashboard</i> <span>Dashboard</span></a>
+            <a class="nav-item" data-target="rekap" onclick="navigate('rekap')"><i class="material-icons-round">table_view</i> <span>Data Supervisi</span></a>
+            <a class="nav-item" data-target="cetak" onclick="navigate('cetak')"><i class="material-icons-round">print</i> <span>Cetak Laporan</span></a>
+            <a class="nav-item hidden" id="nav-pengaturan" data-target="pengaturan" onclick="navigate('pengaturan')"><i class="material-icons-round">settings</i> <span>Pengaturan Data</span></a>
+            <a class="nav-item hidden" id="nav-akun" data-target="akun" onclick="navigate('akun')"><i class="material-icons-round">manage_accounts</i> <span>Manajemen Akun</span></a>
+            <a class="nav-item mobile-only" onclick="handleLogout()" style="color: var(--danger);"><i class="material-icons-round">logout</i></a>
+        </div>
+        <div class="user-profile">
+            <div class="user-profile-inner">
+                <div class="user-avatar" id="display-user-avatar" style="background: linear-gradient(135deg, var(--primary), #7c6ff0); color:#fff; font-weight:bold; display:flex; align-items:center; justify-content:center; border-radius:50%; width:38px; height:38px;">-</div>
+                <div class="user-profile-text"><div class="text-sm font-semibold" id="display-user-name">Memuat...</div><div class="text-xs text-muted" id="display-user-role">-</div></div>
+            </div>
+            <button class="btn btn-outline w-full" onclick="handleLogout()"><i class="material-icons-round" style="font-size: 1rem;">logout</i> Keluar</button>
+        </div>
+    </nav>
+
+    <main id="main-content" class="hidden">
+        
+        <div id="view-dashboard" class="page-view active">
+            
+            <div class="dash-hero">
+                <div class="dash-hero-header">
+                    <div class="hero-top-bar" style="margin-bottom: 0;">
+                        <div class="user-info-group">
+                            <div class="avatar-circle flex-shrink-0">
+                                <i class="material-icons-round" style="font-size: 1.5rem;">account_circle</i>
+                            </div>
+                            <div class="user-greeting-text">
+                                <div class="user-greeting-name">Halo, <span id="welcome-name">-</span></div>
+                                <div class="user-greeting-school" id="dash-satuan-pendidikan-header">-</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-icon flex-shrink-0" style="color: white; background: rgba(255,255,255,0.2); border-radius: 0.5rem; width: 38px; height: 38px;" title="Notifikasi"><i class="material-icons-round">notifications_active</i></button>
+                    </div>
+                </div>
+
+                <div class="dash-hero-card">
+                    <div id="header-datetime"  style="margin-bottom: 1rem; border-bottom: 1px dashed #e2e8f0; padding-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;"></div>
+                    <div style="margin-bottom: 1rem;">
+                        <div class="section-header-box amber">
+                            <div class="section-header-title">
+                                <i class="material-icons-round" style="font-size: 1rem; color: #d97706;">verified</i>
+                                <h3 style="color: #92400e; font-size: 0.88rem;">Status Supervisi Aktif</h3>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.3;">Data dapat Anda perbarui secara real-time kapan saja.</p>
+                    </div>
+                    <button class="btn w-full" style="background: linear-gradient(135deg, var(--accent), #f43f5e); color: white; border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.9rem; font-weight: 700; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);" onclick="navigate('rekap'); toggleInputSection(true);">+ Input Laporan Baru</button>
+                </div>
+            </div>
+
+            <div class="compact-row stat-row-mobile" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem; margin-top: 1.5rem;">
+                <div class="card flex items-center gap-3" style="padding: 1rem;">
+                    <div style="background: rgba(37,99,235,0.1); width: 44px; height: 44px; border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="material-icons-round" style="font-size: 1.5rem;">assignment</i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-muted" style="font-weight: 600;">Total Laporan</div>
+                        <h2 id="dash-total-laporan" style="font-size: 1.75rem; font-weight: 800; line-height: 1.1; margin-top: 2px;">0</h2>
+                    </div>
+                </div>
+                <div class="card flex items-center gap-3" style="padding: 1rem;">
+                    <div style="background: rgba(245,158,11,0.1); width: 44px; height: 44px; border-radius: 50%; color: #d97706; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="material-icons-round" style="font-size: 1.5rem;">warning_amber</i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-muted" style="font-weight: 600;">Total Temuan</div>
+                        <h2 id="dash-total-temuan" style="font-size: 1.75rem; font-weight: 800; line-height: 1.1; margin-top: 2px; color: #d97706;">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="section-header-box blue">
+                    <div class="section-header-title">
+                        <div class="section-header-icon blue">
+                            <i class="material-icons-round" style="font-size: 1.15rem;">show_chart</i>
+                        </div>
+                        <h3 style="color: #0369a1;">Tren Temuan Supervisi Bulanan</h3>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                        <select id="chart-filter-satuan" class="input-modern" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; border-color: #bae6fd; background-color: white;" onchange="updateDashboardChart()">
+                            <option value="Semua">Semua Satuan</option>
+                            <option value="TK Islam Sabilillah">TK Islam Sabilillah</option>
+                            <option value="SD Islam Sabilillah">SD Islam Sabilillah</option>
+                            <option value="SMP Islam Sabilillah">SMP Islam Sabilillah</option>
+                            <option value="SMA Islam Sabilillah">SMA Islam Sabilillah</option>
+                            <option value="SMA Islam Sabilillah Boarding School">SMA Islam Sabilillah Boarding School</option>
+                        </select>
+                        <select id="chart-filter-bulan" class="input-modern" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; border-color: #bae6fd; background-color: white;" onchange="updateDashboardChart()">
+                            <option value="Semua">Semua Bulan (Tren Bulanan)</option>
+                            <option value="Januari">Januari</option>
+                            <option value="Februari">Februari</option>
+                            <option value="Maret">Maret</option>
+                            <option value="April">April</option>
+                            <option value="Mei">Mei</option>
+                            <option value="Juni">Juni</option>
+                            <option value="Juli">Juli</option>
+                            <option value="Agustus">Agustus</option>
+                            <option value="September">September</option>
+                            <option value="Oktober">Oktober</option>
+                            <option value="November">November</option>
+                            <option value="Desember">Desember</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="chart-temuan"></canvas></div>
+            </div>
+
+            <div class="section-header-box emerald">
+                <div class="section-header-title">
+                    <div class="section-header-icon emerald">
+                        <i class="material-icons-round" style="font-size: 1.15rem;">domain</i>
+                    </div>
+                    <h3 style="color: #15803d;">Rekapitulasi per Satuan Pendidikan</h3>
+                </div>
+                <div class="flex gap-2 items-center flex-wrap">
+                    <label class="text-xs font-semibold" style="color: #166534;">Dari</label>
+                    <input type="date" id="dash-filter-start" class="input-modern" style="padding: 0.3rem 0.5rem; font-size: 0.85rem; border-color: #bbf7d0; background-color: white;" onchange="loadDashboardData()">
+                    <label class="text-xs font-semibold" style="color: #166534;">Sampai</label>
+                    <input type="date" id="dash-filter-end" class="input-modern" style="padding: 0.3rem 0.5rem; font-size: 0.85rem; border-color: #bbf7d0; background-color: white;" onchange="loadDashboardData()">
+                </div>
+            </div>
+            <div id="satuan-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <!-- data satuan diisi via JS -->
+            </div>
+
+            <div class="flex flex-col gap-4" style="margin-bottom: 2rem;">
+                <div class="card">
+                    <div class="section-header-box amber">
+                        <div class="section-header-title">
+                            <div class="section-header-icon amber">
+                                <i class="material-icons-round" style="font-size: 1.15rem;">history</i>
+                            </div>
+                            <h3 style="color: #b45309;">Input Supervisi Terbaru</h3>
+                        </div>
+                        <button class="btn btn-outline btn-icon" style="background: white; border-color: #fde68a; color: #d97706;" onclick="navigate('rekap')" title="Lihat semua data">
+                            <i class="material-icons-round">arrow_forward</i>
+                        </button>
+                    </div>
+                    <div id="recent-supervisi-list" class="flex flex-col"><div class="text-center text-muted text-sm" style="padding: 1rem;">Memuat data...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-rekap" class="page-view">
+            <div class="page-header">
+                <div class="flex justify-between items-center" style="gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-outline btn-icon hidden-mobile" onclick="toggleSidebarDesktop()" style="border:none; box-shadow:none; background:transparent; padding:0; color:var(--text-main);"><i class="material-icons-round" style="font-size: 1.75rem;">menu</i></button>
+                        <div style="background: #10b981; color: white; padding: 0.75rem; border-radius: 0.75rem;"><i class="material-icons-round" style="font-size: 1.75rem;">table_view</i></div>
+                        <div><h1 class="page-title">Data Supervisi</h1><p class="text-muted text-sm">Kelola dan lihat laporan supervisi.</p></div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-outline btn-icon" onclick="loadRekapitulasi()" title="Segarkan Data" style="background: white;"><i class="material-icons-round">refresh</i></button>
+                        <button class="btn btn-primary btn-expandable" onclick="toggleInputSection()" id="btn-toggle-input" title="Input Supervisi Baru"><i class="material-icons-round" id="icon-toggle-input">add</i><span class="expandable-text" id="text-toggle-input">Input Supervisi</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-rekap">
+                <div class="card" style="margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; align-items: end;">
+                        <div class="form-group" style="margin: 0;" id="container-filter-rekap-satuan"><label>Satuan Pendidikan</label><select id="filter-rekap-satuan" onchange="applyFilterRekap()"><option value="Semua">Semua Satuan</option></select></div>
+                        <div class="form-group" style="margin: 0;" id="container-filter-rekap-supervisor"><label>Nama Supervisor</label><select id="filter-rekap-supervisor" onchange="applyFilterRekap()"><option value="Semua">Semua Supervisor</option></select></div>
+                        <div class="form-group" style="margin: 0;"><label>Filter Bulan</label><select id="filter-rekap-bulan" onchange="applyFilterRekap()"><option value="Semua">Semua Bulan</option><option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option><option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option><option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option><option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option></select></div>
+                        <div class="form-group" style="margin: 0;"><label>Filter Tahun Ajaran</label><select id="filter-rekap-tahun" onchange="applyFilterRekap()"><option value="Semua">Semua Tahun</option></select></div>
+                        <div class="form-group" style="margin: 0;"><label>Dari Tanggal</label><input type="date" id="filter-rekap-start" onchange="applyFilterRekap()"></div>
+                        <div class="form-group" style="margin: 0;"><label>Sampai Tanggal</label><input type="date" id="filter-rekap-end" onchange="applyFilterRekap()"></div>
+                        <button class="btn btn-outline" style="height: 42px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onclick="resetFilterRekap()" title="Reset Filter"><i class="material-icons-round">filter_alt_off</i> Reset</button>
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div class="table-container">
+                        <table id="table-rekap">
+                            <thead><tr><th>Tanggal</th><th>Satuan Pendidikan</th><th>Supervisor</th><th>Waktu</th><th>Pertemuan</th><th style="width: 120px;">Aksi</th></tr></thead>
+                            <tbody id="tbody-rekap"></tbody>
+                        </table>
+                        <div class="pagination-container" id="pagination-controls">
+                            <span class="pagination-info" id="pagination-info">Menampilkan 0 - 0 dari 0 data</span>
+                            <div class="pagination-controls"><button class="btn btn-outline btn-icon" id="btn-prev-page" onclick="changePage(-1)"><i class="material-icons-round">chevron_left</i></button><button class="btn btn-outline btn-icon" id="btn-next-page" onclick="changePage(1)"><i class="material-icons-round">chevron_right</i></button></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="detail-temuan-area" class="card hidden" style="margin-top: 1rem; border-left: 4px solid var(--primary);">
+                    <div class="flex justify-between items-center" style="margin-bottom: 1rem;"><h3>Detail Pertemuan</h3><button class="btn btn-icon btn-outline" onclick="document.getElementById('detail-temuan-area').classList.add('hidden')"><i class="material-icons-round">close</i></button></div>
+                    <div id="detail-temuan-content"></div>
+                </div>
+            </div>
+
+            <div id="section-input" class="hidden">
+                <div class="card">
+                    <h2 style="margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem;" id="title-form-input">Form Input Supervisi</h2>
+                    <form id="form-supervisi" onsubmit="event.preventDefault(); saveSupervisi();">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Satuan Pendidikan</label><select id="input-satuan" required onchange="autoFillSupervisor()"><option value="">-- Pilih --</option></select></div>
+                            <div class="form-group"><label>Nama Supervisor</label><input type="text" id="input-nama" required readonly></div>
+                            <div class="form-group"><label>Tahun Ajaran</label><select id="input-tahun" required><option value="">-- Pilih --</option></select></div>
+                            <div class="form-group"><label>Hari & Tanggal</label><input type="date" id="input-tanggal" required onchange="autoFillBulan()" oninput="autoFillBulan()"></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>Waktu (Pukul)</label><input type="time" id="input-waktu" required></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>Bulan Pengisian</label><input type="text" id="input-bulan" class="input-modern" required readonly style="background-color: #f1f5f9; cursor: not-allowed; border-color: #cbd5e1; color: #64748b; font-weight: 600;"></div>
+                        </div>
+                        <div style="margin-top: 1rem; border-top: 2px solid #e2e8f0; padding-top: 1.5rem;">
+                            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                                <div><h3 style="font-size: 1.15rem;">Data Pertemuan & Temuan</h3><p class="text-xs text-muted">Tambahkan baris jika terdapat lebih dari satu temuan terpisah.</p></div>
+                                <button type="button" class="btn btn-outline text-sm" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;" onclick="addPertemuanRow()"><i class="material-icons-round" style="font-size: 1.1rem;">add_circle</i> Tambah Temuan</button>
+                            </div>
+                            <div id="pertemuan-container" class="pertemuan-list"></div>
+                        </div>
+                        <div style="margin-top: 2.5rem; display: flex; justify-content: flex-end; gap: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                            <button type="button" class="btn btn-outline" onclick="toggleInputSection(false)"><i class="material-icons-round">close</i> Batal</button>
+                            <button type="submit" class="btn btn-primary" id="btn-submit-supervisi"><i class="material-icons-round">save</i> <span>Simpan Laporan</span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-cetak" class="page-view">
+            <div class="page-header hide-on-print">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="btn btn-outline btn-icon hidden-mobile" onclick="toggleSidebarDesktop()" style="border:none; box-shadow:none; background:transparent; padding:0; color:var(--text-main);"><i class="material-icons-round" style="font-size: 1.75rem;">menu</i></button>
+                    <div style="background: #f59e0b; color: white; padding: 0.75rem; border-radius: 0.75rem;"><i class="material-icons-round" style="font-size: 1.75rem;">print</i></div>
+                    <div><h1 class="page-title">Cetak Laporan</h1><p class="text-muted text-sm">Pilih bulan, filter, ekspor ke PDF/Excel atau Cetak langsung.</p></div>
+                </div>
+            </div>
+            
+            <div class="card hide-on-print" style="margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end;">
+                    <div class="form-group" style="margin: 0;">
+                        <label>Pilih Bulan</label>
+                        <select id="cetak-bulan"><option value="Semua">-- Semua Bulan --</option><option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option><option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option><option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option><option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option></select>
+                    </div>
+                    <div class="form-group" id="container-cetak-satuan" style="margin: 0; display: none;">
+                        <label>Satuan Pendidikan</label>
+                        <select id="cetak-satuan"><option value="Semua">-- Semua Satuan --</option></select>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; width: 100%; height: 42px; min-width: 0;">
+                        <button class="btn btn-primary" style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.85rem;" onclick="generateLaporan()"><i class="material-icons-round">filter_list</i> <span>Tampilkan</span></button>
+                        <button class="btn btn-outline" style="color: #16a34a; border-color: #a7f3d0; background: #f0fdf4; padding: 0 0.75rem; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.85rem; font-weight: 700;" onclick="exportToExcel()" title="Export ke Excel"><i class="material-icons-round" style="font-size: 1.25rem;">table_chart</i> <span class="hidden-mobile">Excel</span></button>
+                        <button class="btn btn-outline" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2; padding: 0 0.75rem; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.85rem; font-weight: 700;" onclick="exportToPDF()" title="Export ke PDF"><i class="material-icons-round" style="font-size: 1.25rem;">picture_as_pdf</i> <span class="hidden-mobile">PDF</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Area Cetak -->
+            <div id="print-area" class="card hidden" style="background: white; border-radius: 0; box-shadow: none; color: black; font-family: 'Times New Roman', Times, serif;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <img id="print-logo" src="https://i.ibb.co/HTKMs1Q7/LPI-3-10-New.png" alt="Logo LPI" style="width: 75px; height: 75px; object-fit: contain;" crossorigin="anonymous">
+                    <div style="text-align: center; font-weight: bold; font-size: 14pt; line-height: 1.2;">
+                        JURNAL SUPERVISI<br>KEBERSIHAN, KERAPIAN DAN PERAWATAN SARPRAS<br>LPI SABILILLAH MALANG
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem; font-size: 11pt; line-height: 1.2;">
+                    <div style="display: flex; margin-bottom: 4px;"><div style="width: 150px;">Satuan Pendidikan</div><div>: <span id="print-satuan">-</span></div></div>
+                    <div style="display: flex;"><div style="width: 150px;">Bulan</div><div>: <span id="print-bulan-tahun">-</span></div></div>
+                </div>
+                <div class="table-container" style="border: none; border-radius: 0;">
+                    <table id="table-cetak" style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid black; padding: 6px; text-align: center; width: 5%; background: #10b981; color: white;">No</th>
+                                <th style="border: 1px solid black; padding: 6px; text-align: center; width: 20%; white-space: nowrap; background: #10b981; color: white;">Hari, Tanggal</th>
+                                <th style="border: 1px solid black; padding: 6px; text-align: center; width: 10%; background: #10b981; color: white;">Waktu</th>
+                                <th style="border: 1px solid black; padding: 6px; text-align: center; width: 35%; background: #10b981; color: white;">Catatan Temuan</th>
+                                <th style="border: 1px solid black; padding: 6px; text-align: center; width: 30%; background: #10b981; color: white;">Langkah yang di ambil</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-cetak"></tbody>
+                    </table>
+                </div>
+                <div id="print-signature" style="display: flex; justify-content: space-between; margin-top: 2rem; font-size: 11pt; line-height: 1; page-break-inside: avoid;">
+                    <div style="width: 40%; padding-left: 1rem;">
+                        <p style="margin:0; margin-bottom:4px;">Mengetahui,</p><p style="margin:0;">Kepala Sekolah</p>
+                        <p style="margin-top: 4rem; margin-bottom: 4px;" id="print-sign-kepsek">Nama</p><p style="margin:0;">NIPY. <span id="print-nipy-kepsek">_________________</span></p>
+                    </div>
+                    <div style="width: 40%; padding-left: 2rem;">
+                        <p style="margin:0; margin-bottom:4px;">Malang, <span id="print-date-today"></span></p><p style="margin:0;">Kepala TU,</p>
+                        <p style="margin-top: 4rem; margin-bottom: 4px;" id="print-sign-tu">Nama</p><p style="margin:0;">NIPY. <span id="print-nipy-tu">_________________</span></p>
+                    </div>
+                </div>
+                <div class="hide-on-print" style="margin-top: 2rem; text-align: center;">
+                    <button class="btn btn-primary" onclick="window.print()"><i class="material-icons-round">print</i> Cetak Laporan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-pengaturan" class="page-view">
+            <div class="page-header"><div class="flex items-center gap-4"><button class="btn btn-outline btn-icon hidden-mobile" onclick="toggleSidebarDesktop()" style="border:none; box-shadow:none; background:transparent; padding:0; color:var(--text-main);"><i class="material-icons-round" style="font-size: 1.75rem;">menu</i></button><div style="background: #64748b; color: white; padding: 0.75rem; border-radius: 0.75rem;"><i class="material-icons-round">settings</i></div><div><h1 class="page-title">Pengaturan Master</h1></div></div></div>
+            <div class="flex flex-col gap-4" style="align-items: stretch;">
+                <div class="card">
+                    <div class="section-header-box slate">
+                        <div class="section-header-title">
+                            <div class="section-header-icon slate"><i class="material-icons-round" style="font-size: 1.15rem;">calendar_month</i></div>
+                            <h3 style="color: #334155;">Data Tahun Ajaran</h3>
+                        </div>
+                    </div>
+                    <form onsubmit="event.preventDefault(); addTahunAjaran();" style="margin-top: 1rem; display: flex; gap: 0.5rem;"><input type="text" id="setting-tahun" placeholder="2024/2025" required style="flex: 1;"><button type="submit" class="btn btn-primary"><i class="material-icons-round">add</i></button></form>
+                    <div class="table-container" style="margin-top: 1rem;"><table id="table-tahun"><thead><tr><th>Tahun Ajaran</th><th style="width: 80px;">Aksi</th></tr></thead><tbody id="tbody-setting-tahun"></tbody></table></div>
+                </div>
+                <div class="card">
+                    <div class="section-header-box slate">
+                        <div class="section-header-title">
+                            <div class="section-header-icon slate"><i class="material-icons-round" style="font-size: 1.15rem;">school</i></div>
+                            <h3 style="color: #334155;">Data Satuan & Supervisor</h3>
+                        </div>
+                    </div>
+                    <form onsubmit="event.preventDefault(); addSekolah();" style="margin-top: 1rem;">
+                        <div class="form-group"><label>Satuan Pendidikan</label><input type="text" id="setting-sekolah" required></div>
+                        <div class="form-group"><label>Supervisor</label><input type="text" id="setting-supervisor" required></div>
+                        <button type="submit" class="btn btn-primary w-full"><i class="material-icons-round">add</i> Tambah</button>
+                    </form>
+                    <div class="table-container" style="margin-top: 1rem;"><table id="table-sekolah"><thead><tr><th>Satuan</th><th>Supervisor</th><th style="width: 80px;">Aksi</th></tr></thead><tbody id="tbody-setting-sekolah"></tbody></table></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-akun" class="page-view">
+            <div class="page-header"><div class="flex items-center gap-4"><button class="btn btn-outline btn-icon hidden-mobile" onclick="toggleSidebarDesktop()" style="border:none; box-shadow:none; background:transparent; padding:0; color:var(--text-main);"><i class="material-icons-round" style="font-size: 1.75rem;">menu</i></button><div style="background: #ef4444; color: white; padding: 0.75rem; border-radius: 0.75rem;"><i class="material-icons-round">manage_accounts</i></div><div><h1 class="page-title">Manajemen Akun</h1></div></div></div>
+            <div class="flex flex-col gap-4" style="align-items: stretch;">
+                <div class="card">
+                    <div class="section-header-box blue">
+                        <div class="section-header-title">
+                            <div class="section-header-icon blue"><i class="material-icons-round" style="font-size: 1.15rem;">person_add</i></div>
+                            <h3 id="form-akun-title" style="color: #0369a1;">Tambah Akun Baru</h3>
+                        </div>
+                    </div>
+                    <form onsubmit="event.preventDefault(); saveUserAccount();" style="margin-top: 1rem;">
+                        <input type="hidden" id="akun-edit-id" value="">
+                        <div class="form-group">
+                            <label>Peran / Role</label>
+                            <select id="akun-role" required>
+                                <option value="user">Satuan Pendidikan</option>
+                                <option value="supervisor_lpis">Supervisor LPIS</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Satuan Pendidikan / Instansi</label><input type="text" id="akun-sekolah" placeholder="Contoh: SMPN 1 Malang atau LPIS" required></div>
+                        <div class="form-group"><label>Nama Kepala Sekolah</label><input type="text" id="akun-kepsek" placeholder="Contoh: Drs. Budi Santoso" required></div>
+                        <div class="form-group"><label>NIPY Kepala Sekolah</label><input type="text" id="akun-nipy-kepsek" placeholder="Contoh: 12345678" required></div>
+                        <div class="form-group"><label>Nama Kepala TU</label><input type="text" id="akun-tu" placeholder="Contoh: Siti Aminah, S.E." required></div>
+                        <div class="form-group"><label>NIPY Kepala TU</label><input type="text" id="akun-nipy-tu" placeholder="Contoh: 87654321" required></div>
+                        <div class="form-group"><label>Username (NPSN / Unik)</label><input type="text" id="akun-username" placeholder="Contoh: smpn1mlg" required></div>
+                        <div class="form-group"><label>Password</label><input type="text" id="akun-password" placeholder="Minimal 6 karakter" required></div>
+                        <div class="flex gap-2" style="margin-top: 1.5rem;">
+                            <button type="button" id="btn-batal-akun" class="btn btn-outline hidden w-full" onclick="window.resetAkunForm()">Batal Edit</button>
+                            <button type="submit" id="btn-submit-akun" class="btn btn-primary w-full">Simpan Akun</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card" style="padding: 1.25rem 1rem 0 1rem;">
+                    <div class="section-header-box slate">
+                        <div class="section-header-title">
+                            <div class="section-header-icon slate"><i class="material-icons-round" style="font-size: 1.15rem;">group</i></div>
+                            <h3 style="color: #334155;">Daftar Akun Pengguna</h3>
+                        </div>
+                    </div>
+                    <div class="table-container" style="border:none; border-radius:0;">
+                        <table><thead><tr><th>Satuan Pendidikan</th><th>Username</th><th>Kepala Sekolah</th><th>Kepala TU</th><th style="width: 100px;">Aksi</th></tr></thead><tbody id="tbody-akun"></tbody></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script type="module">
+    window.setText = function(id, text) { const el = document.getElementById(id); if (el) { el.innerText = text; } else { console.warn("Missing element for setText:", id); } };
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, doc, deleteDoc, setDoc, getDoc, updateDoc, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    // MODE PREVIEW - Ganti ke 'false' jika sudah setting config & rules Firebase sungguhan!
+    const IS_PREVIEW = false; 
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDuelwWRgYQ1uI0qtWXpc3XTyejtghD4s8",
+        authDomain: "supervisi-21eec.firebaseapp.com",
+        projectId: "supervisi-21eec",
+        storageBucket: "supervisi-21eec.firebasestorage.app",
+        messagingSenderId: "1057934512311",
+        appId: "1:1057934512311:web:95cd73c0b3f75fda32fd32"
+    };
+
+    let app, auth, db;
+    let currentUser = null; 
+    let globalSupervisiData = [];
+    let filteredSupervisiData = []; 
+    let globalSettings = { tahunAjaran: [], sekolahList: [] };
+    let editModeId = null; 
+    let itemsPerPage = 10;
+    let currentPage = 1;
+    let dashboardChartInstance = null;
+
+    // Helper Functions
+    window.toggleSidebarDesktop = () => { document.getElementById('sidebar').classList.toggle('collapsed-desktop'); };
+    window.togglePassword = (inputId, btn) => { const input = document.getElementById(inputId); const icon = btn.querySelector('i'); if (input.type === 'password') { input.type = 'text'; if(icon) icon.innerText = 'visibility_off'; } else { input.type = 'password'; if(icon) icon.innerText = 'visibility'; } };
+    
+    window.showToast = (msg, type='info') => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div'); toast.className = `toast`;
+        const icon = type === 'error' ? 'error' : (type === 'success' ? 'check_circle' : 'info');
+        const color = type === 'error' ? 'var(--danger)' : (type === 'success' ? 'var(--success)' : 'var(--primary)');
+        toast.style.borderLeftColor = color; toast.innerHTML = `<i class="material-icons-round" style="color: ${color}">${icon}</i><span>${msg}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    };
+
+    window.showConfirmModal = (title, msg, callback) => {
+        const modal = document.getElementById('custom-modal-overlay');
+        window.setText('modal-title', title); window.setText('modal-msg', msg);
+        modal.classList.remove('hidden');
+        document.getElementById('btn-modal-cancel').onclick = () => modal.classList.add('hidden');
+        document.getElementById('btn-modal-confirm').onclick = () => { modal.classList.add('hidden'); if(callback) callback(); };
+    };
+
+    // Initialization
+    window.initApp = async function initApp() {
+        if (IS_PREVIEW) {
+            window.mockUsers = [
+                { id: "sekolah1", username: "sekolah1", password: "123", satuanPendidikan: "SMAN 1 Malang", namaSupervisor: "Budi Santoso", kepsek: "Budi Santoso", kepalaTU: "Siti Aminah", role: "user" },
+                { id: "lpis1", username: "lpis", password: "123", satuanPendidikan: "LPI Sabilillah", namaSupervisor: "Drs. Ahmad (Supervisor LPIS)", kepsek: "Drs. Ahmad (Supervisor LPIS)", kepalaTU: "LPI Pusat", role: "supervisor_lpis" }
+            ];
+            window.mockSupervisi = [];
+            window.mockSettings = { tahunAjaran: ["2023/2024", "2024/2025"], sekolahList: [{ nama: "SMAN 1 Malang", supervisor: "Budi Santoso" }, { nama: "SMKN 1 Malang", supervisor: "Siti Aminah" }] };
+            const saved = localStorage.getItem('supervisi_session');
+            if (saved) { currentUser = JSON.parse(saved); proceedToApp(); }
+            return;
+        }
+        try {
+            app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app);
+            const saved = localStorage.getItem('supervisi_session');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                proceedToApp();
+            }
+            onAuthStateChanged(auth, (user) => { if (user && (!currentUser || currentUser.role !== 'admin')) { currentUser = { id: user.email, role: 'admin', satuanPendidikan: 'Dinas Pusat', namaSupervisor: 'Administrator' }; proceedToApp(); } });
+        } catch (error) { console.error("Firebase Init Error:", error); showToast("Gagal terhubung ke Firebase.", "error"); }
+    }
+
+    // Login Logic
+    window.switchLoginTab = (tab, evt) => {
+        document.querySelectorAll('.login-tab').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.login-form').forEach(e => e.classList.remove('active'));
+        if (evt) evt.target.classList.add('active');
+        document.getElementById(`form-${tab}`).classList.add('active');
+    };
+
+    window.handleUserLogin = async () => {
+        const user = document.getElementById('login-user-id').value; const pass = document.getElementById('login-user-pass').value;
+        if(!user || !pass) return showToast("Isi ID dan Password!", "error");
+        if (IS_PREVIEW) {
+            const found = window.mockUsers.find(u => u.username === user && u.password === pass);
+            if(found) { currentUser = found; proceedToApp(); } else showToast("Akun salah (Preview)", "error");
+            return;
+        }
+        try {
+            const q = query(collection(db, "users"), where("username", "==", user), where("password", "==", pass));
+            const snap = await getDocs(q);
+            if (!snap.empty) { currentUser = { id: snap.docs[0].id, ...snap.docs[0].data() }; showToast("Login Berhasil!", "success"); proceedToApp(); } else showToast("Akun tidak ada!", "error");
+        } catch (e) { showToast("Gagal database. Cek Rules!", "error"); }
+    };
+
+    window.handleAdminLogin = async () => {
+        const email = document.getElementById('login-admin-email').value; const pass = document.getElementById('login-admin-pass').value;
+        if(!email || !pass) return showToast("Isi Email dan Password!", "error");
+        if (IS_PREVIEW) { currentUser = { id: 'admin', role: 'admin', satuanPendidikan: 'Pusat', namaSupervisor: 'Administrator' }; proceedToApp(); return; }
+        try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { showToast("Login gagal! Pastikan admin sudah terdaftar di Firebase Auth.", "error"); }
+    };
+
+    window.handleLogout = async () => { if(!IS_PREVIEW && currentUser?.role === 'admin') await signOut(auth); currentUser = null; localStorage.removeItem('supervisi_session'); document.getElementById('login-view').classList.remove('hidden'); document.getElementById('sidebar').classList.add('hidden'); document.getElementById('main-content').classList.add('hidden'); };
+
+    window.proceedToApp = function proceedToApp() {
+        localStorage.setItem('supervisi_session', JSON.stringify(currentUser));
+        document.getElementById('login-view').classList.add('hidden'); document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('main-content').classList.remove('hidden');
+        
+        let roleDisplay = currentUser.role.toUpperCase();
+        if (currentUser.role === 'supervisor_lpis') roleDisplay = 'SUPERVISOR LPIS';
+        
+        window.setText('display-user-name', currentUser.namaSupervisor || 'Admin'); window.setText('display-user-role', `${roleDisplay} - ${currentUser.satuanPendidikan}`);
+        window.setText('display-user-avatar', (currentUser.namaSupervisor || 'A').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase());
+        
+        // Pengaturan Akun dan App hanya untuk Admin
+        if(currentUser.role === 'admin') { 
+            document.getElementById('nav-pengaturan').classList.remove('hidden'); 
+            document.getElementById('nav-akun').classList.remove('hidden'); 
+            loadAkunData(); 
+        } else { 
+            document.getElementById('nav-pengaturan').classList.add('hidden'); 
+            document.getElementById('nav-akun').classList.add('hidden'); 
+        }
+
+        // Filter Satuan & Supervisor dilihat oleh Admin dan Supervisor LPIS
+        if(currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') {
+            document.getElementById('container-cetak-satuan').style.display = 'block'; 
+            if(document.getElementById('chart-filter-satuan')) document.getElementById('chart-filter-satuan').style.display = 'inline-block';
+            if(document.getElementById('container-filter-rekap-satuan')) document.getElementById('container-filter-rekap-satuan').style.display = 'block';
+            if(document.getElementById('container-filter-rekap-supervisor')) document.getElementById('container-filter-rekap-supervisor').style.display = 'block';
+        } else {
+            document.getElementById('container-cetak-satuan').style.display = 'none'; 
+            if(document.getElementById('chart-filter-satuan')) document.getElementById('chart-filter-satuan').style.display = 'none';
+            if(document.getElementById('container-filter-rekap-satuan')) document.getElementById('container-filter-rekap-satuan').style.display = 'none';
+            if(document.getElementById('container-filter-rekap-supervisor')) document.getElementById('container-filter-rekap-supervisor').style.display = 'none';
+        }
+
+        if(document.getElementById('pertemuan-container').children.length === 0) addPertemuanRow();
+        loadSettings().then(async () => { 
+            await window.loadRekapitulasi();
+            navigate('dashboard'); 
+            loadDashboardData(); 
+        });
+    }
+
+    // Navigation & Forms
+    window.navigate = (target) => {
+        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+        const navItem = document.querySelector(`.nav-item[data-target="${target}"]`); if(navItem) navItem.classList.add('active');
+        document.querySelectorAll('.page-view').forEach(e => e.classList.remove('active'));
+        document.getElementById(`view-${target}`).classList.add('active');
+        if(target === 'rekap') { loadRekapitulasi(); toggleInputSection(false); }
+    };
+
+    window.toggleInputSection = (forceOpen = null) => {
+        const sr = document.getElementById('section-rekap'), si = document.getElementById('section-input'), bt = document.getElementById('btn-toggle-input');
+        const shouldOpen = forceOpen !== null ? forceOpen : si.classList.contains('hidden');
+        if (shouldOpen) { sr.classList.add('hidden'); si.classList.remove('hidden'); bt.classList.add('expanded'); window.setText('icon-toggle-input', 'keyboard_arrow_up'); window.setText('text-toggle-input', editModeId ? 'Tutup Edit' : 'Input Supervisi'); } 
+        else { si.classList.add('hidden'); sr.classList.remove('hidden'); bt.classList.remove('expanded'); window.setText('icon-toggle-input', 'add'); if(!editModeId) window.resetFormSupervisi(); editModeId = null; }
+    };
+
+    let pertemuanCount = 0;
+    window.addPertemuanRow = () => {
+        pertemuanCount++; const div = document.createElement('div'); div.className = 'pertemuan-item'; div.id = `row-pertemuan-${pertemuanCount}`;
+        div.innerHTML = `<div class="flex justify-between items-center" style="margin-bottom: 1.25rem; border-bottom: 1px dashed #cbd5e1; padding-bottom: 0.75rem;"><h4 class="text-sm font-semibold flex items-center gap-2"><i class="material-icons-round" style="color: var(--primary);">chat_bubble_outline</i> Catatan Detail Temuan</h4>${pertemuanCount > 1 ? `<button type="button" class="btn btn-outline text-xs" style="padding: 0.35rem 0.75rem; background: #fff1f2; border-color: #fecdd3; color: #be123c;" onclick="document.getElementById('${div.id}').remove()">Hapus Baris</button>` : ''}</div><div class="pertemuan-grid" style="display: flex; flex-direction: column; gap: 1rem;"><div class="form-group"><label>Nama</label><input type="text" class="input-nama-pertemuan" placeholder="Nama..." style="padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); width: 100%; box-sizing: border-box;" required></div><div class="form-group"><label>Deskripsi Temuan</label><textarea class="input-temuan" style="min-height: 80px;" required></textarea></div><div class="form-group"><label>Langkah Strategis</label><textarea class="input-langkah" style="min-height: 80px;" required></textarea></div></div>`;
+        document.getElementById('pertemuan-container').appendChild(div);
+    };
+
+    window.resetFormSupervisi = () => { document.getElementById('form-supervisi').reset(); document.getElementById('pertemuan-container').innerHTML = ''; editModeId = null; pertemuanCount = 0; window.setText('title-form-input', "Input Supervisi"); if (currentUser?.role === 'user' && currentUser?.satuanPendidikan) { document.getElementById('input-satuan').value = currentUser.satuanPendidikan; } window.autoFillSupervisor(); addPertemuanRow(); };
+
+    window.saveSupervisi = async () => {
+        if(!currentUser) return;
+        const btnSubmit = document.getElementById('btn-submit-supervisi');
+        if(btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerHTML = '<i class="material-icons-round">hourglass_empty</i> <span>Menyimpan...</span>'; }
+        const data = { userId: currentUser.id, createdByRole: currentUser.role || 'user', satuanPendidikan: document.getElementById('input-satuan').value, namaSupervisor: document.getElementById('input-nama').value, tahunAjaran: document.getElementById('input-tahun').value, bulan: document.getElementById('input-bulan').value, tanggal: document.getElementById('input-tanggal').value, waktu: document.getElementById('input-waktu').value, timestamp: Date.now(), detailPertemuan: [] };
+        document.querySelectorAll('.pertemuan-item').forEach(el => { const n = el.querySelector('.input-nama-pertemuan')?.value; const t = el.querySelector('.input-temuan').value; const l = el.querySelector('.input-langkah').value; if(t && l) data.detailPertemuan.push({ nama: n || '', temuan: t, langkah: l }); });
+        if(data.detailPertemuan.length === 0) { 
+            if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerHTML = editModeId ? '<i class="material-icons-round">update</i> <span>Perbarui Laporan</span>' : '<i class="material-icons-round">save</i> <span>Simpan Laporan</span>'; }
+            return showToast("Isi minimal 1 data temuan!", "error"); 
+        }
+        try {
+            if(IS_PREVIEW) { 
+                if(editModeId) { const idx = window.mockSupervisi.findIndex(s => s.id === editModeId); if(idx !== -1) window.mockSupervisi[idx] = { id: editModeId, ...data }; } else { data.id = "mock-" + Date.now(); window.mockSupervisi.push(data); } 
+            } else { 
+                if (editModeId) { 
+                    await updateDoc(doc(db, "supervisi", editModeId), data); 
+                    const idx = globalSupervisiData.findIndex(s => s.id === editModeId);
+                    if (idx !== -1) globalSupervisiData[idx] = { id: editModeId, ...data };
+                } else { 
+                    const docRef = await addDoc(collection(db, "supervisi"), data); 
+                    data.id = docRef.id;
+                    globalSupervisiData.push(data);
+                } 
+            }
+            showToast(editModeId ? "Laporan Diperbarui!" : "Laporan Disimpan!", "success"); 
+            window.toggleInputSection(false); 
+            
+            // Re-render instead of refetching all data
+            globalSupervisiData.sort((a,b) => b.timestamp - a.timestamp);
+            window.applyFilterRekap();
+            loadDashboardData();
+        } catch (e) { showToast("Gagal menyimpan", "error"); }
+        finally {
+            if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerHTML = editModeId ? '<i class="material-icons-round">update</i> <span>Perbarui Laporan</span>' : '<i class="material-icons-round">save</i> <span>Simpan Laporan</span>'; }
+        }
+    };
+
+    // Rekap & Pagination Data
+    window.loadRekapitulasi = async () => {
+        const tbody = document.getElementById('tbody-rekap'); tbody.innerHTML = Array(5).fill('<tr><td colspan="6"><span class="skeleton-row"></span></td></tr>').join(''); globalSupervisiData = [];
+        try {
+            if(IS_PREVIEW) { globalSupervisiData = (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') ? window.mockSupervisi : window.mockSupervisi.filter(s => s.userId === currentUser.id); } 
+            else { const qRef = (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') ? query(collection(db, "supervisi"), orderBy("timestamp", "desc"), limit(500)) : query(collection(db, "supervisi"), where("userId", "==", currentUser.id), limit(500)); const snap = await getDocs(qRef); snap.forEach(doc => globalSupervisiData.push({ id: doc.id, ...doc.data() })); }
+            globalSupervisiData.sort((a,b) => b.timestamp - a.timestamp);
+            
+            const selSpv = document.getElementById('filter-rekap-supervisor');
+            if (selSpv) {
+                const prevVal = selSpv.value;
+                const spvSet = new Set();
+                globalSupervisiData.forEach(d => { if (d.namaSupervisor) spvSet.add(d.namaSupervisor); });
+                const uList = IS_PREVIEW ? (window.mockUsers || []) : globalUsers;
+                uList.forEach(u => {
+                    const name = u.namaSupervisor || u.kepsek;
+                    if (name) spvSet.add(name);
+                });
+                if (globalSettings && globalSettings.sekolahList) {
+                    globalSettings.sekolahList.forEach(s => { if (s.supervisor) spvSet.add(s.supervisor); });
+                }
+                if (currentUser && (currentUser.namaSupervisor || currentUser.kepsek)) {
+                    spvSet.add(currentUser.namaSupervisor || currentUser.kepsek);
+                }
+
+                selSpv.innerHTML = '<option value="Semua">Semua Supervisor</option>';
+                spvSet.forEach(spv => {
+                    selSpv.innerHTML += `<option value="${spv}">${spv}</option>`;
+                });
+                if (prevVal && (spvSet.has(prevVal) || prevVal === 'Semua')) {
+                    selSpv.value = prevVal;
+                }
+            }
+
+            applyFilterRekap();
+        } catch(e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Gagal memuat data</td></tr>`; }
+    };
+
+    window.resetFilterRekap = () => {
+        document.getElementById('filter-rekap-bulan').value = 'Semua';
+        document.getElementById('filter-rekap-tahun').value = 'Semua';
+        if(document.getElementById('filter-rekap-satuan')) document.getElementById('filter-rekap-satuan').value = 'Semua';
+        if(document.getElementById('filter-rekap-supervisor')) document.getElementById('filter-rekap-supervisor').value = 'Semua';
+        document.getElementById('filter-rekap-start').value = '';
+        document.getElementById('filter-rekap-end').value = '';
+        window.applyFilterRekap();
+    };
+
+    window.applyFilterRekap = () => {
+        const filterBulan = document.getElementById('filter-rekap-bulan').value;
+        const filterTahun = document.getElementById('filter-rekap-tahun').value;
+        const filterSatuan = document.getElementById('filter-rekap-satuan') ? document.getElementById('filter-rekap-satuan').value : 'Semua';
+        const filterSupervisor = document.getElementById('filter-rekap-supervisor') ? document.getElementById('filter-rekap-supervisor').value : 'Semua';
+        const start = document.getElementById('filter-rekap-start').value;
+        const end = document.getElementById('filter-rekap-end').value;
+
+        filteredSupervisiData = globalSupervisiData.filter(item => {
+            const matchBulan = filterBulan === 'Semua' || item.bulan === filterBulan;
+            const matchTahun = filterTahun === 'Semua' || item.tahunAjaran === filterTahun;
+            
+            let matchSatuan = filterSatuan === 'Semua' || item.satuanPendidikan === filterSatuan;
+            if (filterSatuan === 'Temuan Supervisor LPI' || filterSatuan === 'Supervisor LPIS') {
+                matchSatuan = item.createdByRole === 'supervisor_lpis' || item.satuanPendidikan === 'LPI Sabilillah' || item.satuanPendidikan === 'Supervisor LPIS' || item.satuanPendidikan === 'Temuan Supervisor LPI';
+            }
+
+            const matchSupervisor = filterSupervisor === 'Semua' || item.namaSupervisor === filterSupervisor;
+            let matchRange = true;
+            if (start && item.tanggal < start) matchRange = false;
+            if (end && item.tanggal > end) matchRange = false;
+            return matchBulan && matchTahun && matchSatuan && matchSupervisor && matchRange;
+        });
+
+        currentPage = 1; // Reset ke halaman 1 setiap kali filter diubah
+        renderRekapTable();
+    };
+
+    // FUNGSI PAGINASI BARU
+    window.changePage = (step) => {
+        const totalPages = Math.ceil(filteredSupervisiData.length / itemsPerPage);
+        currentPage += step;
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        renderRekapTable();
+    };
+
+    window.renderRekapTable = function renderRekapTable() {
+        const tbody = document.getElementById('tbody-rekap');
+        tbody.innerHTML = '';
+
+        const totalItems = filteredSupervisiData.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+        // Perbarui Info Paginasi
+        const btnPrev = document.getElementById('btn-prev-page');
+        const btnNext = document.getElementById('btn-next-page');
+        const infoText = document.getElementById('pagination-info');
+
+        if(totalItems === 0) {
+            if(infoText) infoText.innerText = `Menampilkan 0 - 0 dari 0 data`;
+            btnPrev.disabled = true; btnPrev.style.opacity = '0.5';
+            btnNext.disabled = true; btnNext.style.opacity = '0.5';
+            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="material-icons-round">folder_open</i><p>Tidak ada data laporan ditemukan pada filter ini.</p></div></td></tr>`; return;
+        }
+
+        // Hitung batasan potong data (slice)
+        if (currentPage > totalPages) currentPage = totalPages;
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+        // Update teks dan status tombol
+        if(infoText) infoText.innerText = `Menampilkan ${startIndex + 1} - ${endIndex} dari ${totalItems} data`;
+        btnPrev.disabled = currentPage === 1; btnPrev.style.opacity = currentPage === 1 ? '0.5' : '1';
+        btnNext.disabled = currentPage === totalPages; btnNext.style.opacity = currentPage === totalPages ? '0.5' : '1';
+
+        // Ambil hanya data untuk halaman ini
+        const pagedData = filteredSupervisiData.slice(startIndex, endIndex);
+
+        const hariArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+        pagedData.forEach((s) => {
+            const originalIdx = globalSupervisiData.findIndex(g => g.id === s.id);
+            
+            // Konversi Tanggal ke Format: Hari, DD/MM/YY
+            let formattedDate = s.tanggal;
+            try {
+                const d = new Date(s.tanggal);
+                if(!isNaN(d)) {
+                    const namaHari = hariArr[d.getDay()];
+                    const tgl = d.getDate().toString().padStart(2, '0');
+                    const bln = (d.getMonth() + 1).toString().padStart(2, '0');
+                    const thn = d.getFullYear().toString().slice(-2);
+                    // Disusun 2 baris (Hari dicetak tebal, tanggal warna abu-abu di bawahnya)
+                    formattedDate = `<div style="font-weight: 800; color: var(--text-main); font-size: 0.9rem;">${namaHari}</div><div style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-top: 2px;">${tgl}/${bln}/${thn}</div>`;
+                }
+            } catch(e) {}
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="white-space: nowrap;">${formattedDate}</td>
+                <td><div class="font-semibold text-main" style="font-size: 0.95rem;">${s.satuanPendidikan}</div></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="badge-spv">${s.namaSupervisor.charAt(0).toUpperCase()}</div>
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #334155;">${s.namaSupervisor}</span>
+                    </div>
+                </td>
+                <td><div class="badge-waktu"><i class="material-icons-round" style="font-size: 1rem;">schedule</i> ${s.waktu} WIB</div></td>
+                <td><div class="badge-temuan">${s.detailPertemuan.length} Temuan</div></td>
+                <td>
+                    <div class="action-group">
+                        <button class="btn-action view" title="Lihat Detail" onclick="lihatDetail(${originalIdx})">
+                            <i class="material-icons-round" style="font-size:1.2rem;">visibility</i>
+                        </button>
+                        <button class="btn-action edit" title="Edit Data" onclick="editSupervisi(${originalIdx})">
+                            <i class="material-icons-round" style="font-size:1.2rem;">edit</i>
+                        </button>
+                        <button class="btn-action delete" title="Hapus Data" onclick="hapusSupervisi('${s.id}')">
+                            <i class="material-icons-round" style="font-size:1.2rem;">delete</i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.hapusSupervisi = (id) => window.showConfirmModal("Hapus Laporan", "Anda yakin ingin menghapus data ini?", async () => { try { if(IS_PREVIEW) window.mockSupervisi = window.mockSupervisi.filter(s => s.id !== id); else await deleteDoc(doc(db, "supervisi", id)); showToast("Dihapus!", "success"); loadRekapitulasi(); loadDashboardData(); } catch(e) { showToast("Gagal menghapus", "error"); } });
+
+    window.editSupervisi = (originalIdx) => {
+        const data = globalSupervisiData[originalIdx]; if(!data) return; editModeId = data.id; window.toggleInputSection(true);
+        window.setText('title-form-input', "Edit Laporan Supervisi"); document.getElementById('btn-submit-supervisi').innerHTML = `<i class="material-icons-round">update</i> <span>Perbarui Laporan</span>`;
+        ['satuan','nama','tahun','bulan','tanggal','waktu'].forEach(key => document.getElementById(`input-${key}`).value = data[key === 'satuan' ? 'satuanPendidikan' : (key === 'nama' ? 'namaSupervisor' : (key === 'tahun' ? 'tahunAjaran' : key))]);
+        document.getElementById('pertemuan-container').innerHTML = ''; pertemuanCount = 0;
+        data.detailPertemuan.forEach(d => { addPertemuanRow(); const rows = document.querySelectorAll('.pertemuan-item'); const curr = rows[rows.length - 1]; const n = curr.querySelector('.input-nama-pertemuan'); if(n) n.value = d.nama || ''; curr.querySelector('.input-temuan').value = d.temuan; curr.querySelector('.input-langkah').value = d.langkah; });
+    };
+
+
+
+    window.lihatDetail = (idx) => {
+        const data = globalSupervisiData[idx]; const container = document.getElementById('detail-temuan-content');
+        let html = `<div style="margin-bottom:1.5rem; border-bottom:1px solid #e2e8f0; padding-bottom:1rem;"><div class="text-sm text-muted">Satuan Pendidikan</div><div class="font-semibold text-main" style="font-size:1.1rem; margin-bottom:0.5rem;">${data.satuanPendidikan}</div><div class="flex gap-4 text-sm"><span style="display: flex; align-items: center; gap: 4px; color: #64748b;"><i class="material-icons-round" style="font-size:1.1rem;">event</i> ${data.tanggal}</span><span style="display: flex; align-items: center; gap: 4px; color: #64748b;"><i class="material-icons-round" style="font-size:1.1rem;">schedule</i> ${data.waktu} WIB</span></div></div>`;
+        data.detailPertemuan.forEach((d, i) => { 
+            html += `<div style="background:#ffffff; padding:1.25rem; border-radius:0.75rem; margin-bottom:1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border:1px solid var(--border);"><div style="font-weight:800; color:var(--primary); margin-bottom:1rem; text-transform:uppercase; font-size:0.85rem; letter-spacing:0.5px; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem;"><i class="material-icons-round" style="font-size: 1.1rem; vertical-align: bottom; margin-right: 4px;">assignment_late</i> Temuan Ke-${i+1}</div>${d.nama ? `<div style="margin-bottom:1rem;"><p class="text-xs" style="color:#64748b; font-weight:700; margin-bottom:0.25rem;">NAMA:</p><p class="text-sm font-semibold">${d.nama}</p></div>` : ''}<div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 0 0.375rem 0.375rem 0; margin-bottom: 1rem;"><p class="text-xs" style="color: #b45309; margin-bottom:0.4rem; font-weight:700; letter-spacing: 0.05em; display: flex; align-items: center; gap: 4px;"><i class="material-icons-round" style="font-size: 1rem;">warning_amber</i> CATATAN TEMUAN</p><p class="text-sm" style="line-height:1.6; color: #451a03; margin-left: 20px;">${d.temuan}</p></div><div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 1rem; border-radius: 0 0.375rem 0.375rem 0;"><p class="text-xs" style="color: #047857; margin-bottom:0.4rem; font-weight:700; letter-spacing: 0.05em; display: flex; align-items: center; gap: 4px;"><i class="material-icons-round" style="font-size: 1rem;">check_circle_outline</i> LANGKAH STRATEGIS</p><p class="text-sm" style="line-height:1.6; color: #064e3b; margin-left: 20px;">${d.langkah}</p></div></div>`; 
+        });
+        container.innerHTML = html; document.getElementById('detail-temuan-area').classList.remove('hidden'); document.getElementById('detail-temuan-area').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    window.updateDashboardChart = function() {
+        setTimeout(() => {
+            const ctx = document.getElementById('chart-temuan'); if(!ctx) return;
+            const filterSatuan = document.getElementById('chart-filter-satuan')?.value || 'Semua';
+            const filterBulan = document.getElementById('chart-filter-bulan')?.value || 'Semua';
+            
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; 
+            const labels = filterBulan === 'Semua' ? months : [filterBulan];
+            
+            let targetSatuan = [];
+            if (filterSatuan !== 'Semua') {
+                targetSatuan = [filterSatuan];
+            } else {
+                if (currentUser && currentUser.role !== 'admin') {
+                    targetSatuan = [currentUser.satuanPendidikan];
+                } else {
+                    targetSatuan = globalSettings && globalSettings.sekolahList ? globalSettings.sekolahList.map(sek => sek.nama) : [];
+                    if (targetSatuan.length === 0) {
+                        targetSatuan = ['TK Islam Sabilillah', 'SD Islam Sabilillah', 'SMP Islam Sabilillah', 'SMA Islam Sabilillah', 'SMA Islam Sabilillah Boarding School'];
+                    }
+                }
+            }
+            
+            const colors = [
+                'rgba(79, 70, 229, 0.8)',
+                'rgba(5, 150, 105, 0.8)',
+                'rgba(234, 88, 12, 0.8)',
+                'rgba(219, 39, 119, 0.8)',
+                'rgba(2, 132, 199, 0.8)'
+            ];
+
+            const datasets = targetSatuan.map((sat, index) => {
+                const dataValues = labels.map(m => {
+                    return globalSupervisiData.filter(s => {
+                        let matchSat = s.satuanPendidikan === sat;
+                        if (sat === 'Temuan Supervisor LPI' || sat === 'Supervisor LPIS') {
+                            matchSat = s.createdByRole === 'supervisor_lpis' || s.satuanPendidikan === 'LPI Sabilillah' || s.satuanPendidikan === 'Supervisor LPIS' || s.satuanPendidikan === 'Temuan Supervisor LPI';
+                        }
+                        return matchSat && s.bulan === m;
+                    }).reduce((acc, curr) => acc + (curr.detailPertemuan ? curr.detailPertemuan.length : 0), 0);
+                });
+                return {
+                    label: sat,
+                    data: dataValues,
+                    backgroundColor: colors[index % colors.length],
+                    borderRadius: 4
+                };
+            });
+            
+            if (dashboardChartInstance) { 
+                dashboardChartInstance.destroy();
+            }
+            
+            dashboardChartInstance = new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: labels, 
+                    datasets: datasets
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: targetSatuan.length > 1, position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }, 
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+                } 
+            }); 
+        }, 50);
+    }
+
+    window.loadDashboardData = function loadDashboardData() {
+        if (!currentUser) return;
+        const welcomeText = currentUser.namaSupervisor || (currentUser.role === 'admin' ? 'Administrator' : 'Pengguna');
+        window.setText('welcome-name', welcomeText);
+        const satuanText = currentUser.role === 'admin' ? 'LPI Sabilillah Malang (Pusat)' : (currentUser.satuanPendidikan || 'LPI Sabilillah Malang');
+        window.setText('dash-satuan-pendidikan-header', satuanText);
+        const updateStats = () => {
+            const startDash = document.getElementById('dash-filter-start')?.value;
+            const endDash = document.getElementById('dash-filter-end')?.value;
+
+            let dashData = globalSupervisiData;
+            if (startDash) {
+                dashData = dashData.filter(d => d.tanggal >= startDash);
+            }
+            if (endDash) {
+                dashData = dashData.filter(d => d.tanggal <= endDash);
+            }
+
+            const totalT = dashData.reduce((acc, s) => acc + (s.detailPertemuan?.length || 0), 0);
+            window.setText('dash-total-laporan', dashData.length); 
+            window.setText('dash-total-temuan', totalT); window.updateDashboardChart();
+            
+            const gridContainer = document.getElementById('satuan-grid');
+            if(gridContainer) {
+                let listSatuan = [];
+                if (currentUser && currentUser.role === 'user') {
+                    listSatuan = [currentUser.satuanPendidikan];
+                } else {
+                    listSatuan = globalSettings.sekolahList.map(sek => sek.nama);
+                    if (listSatuan.length === 0) {
+                        listSatuan.push('TK Islam Sabilillah', 'SD Islam Sabilillah', 'SMP Islam Sabilillah', 'SMA Islam Sabilillah', 'SMA Islam Sabilillah Boarding School');
+                    }
+                }
+                let gridHtml = '';
+                const themeColors = [
+                    { border: '#4f46e5', bg: 'linear-gradient(145deg, #ffffff 0%, #eef2ff 100%)', iconBg: 'rgba(79,70,229,0.1)' },
+                    { border: '#059669', bg: 'linear-gradient(145deg, #ffffff 0%, #ecfdf5 100%)', iconBg: 'rgba(5,150,105,0.1)' },
+                    { border: '#ea580c', bg: 'linear-gradient(145deg, #ffffff 0%, #fff7ed 100%)', iconBg: 'rgba(234,88,12,0.1)' },
+                    { border: '#db2777', bg: 'linear-gradient(145deg, #ffffff 0%, #fdf2f8 100%)', iconBg: 'rgba(219,39,119,0.1)' },
+                    { border: '#0284c7', bg: 'linear-gradient(145deg, #ffffff 0%, #f0f9ff 100%)', iconBg: 'rgba(2,132,199,0.1)' }
+                ];
+                listSatuan.forEach((sat, idx) => {
+                    const theme = themeColors[idx % themeColors.length];
+                    const satData = dashData.filter(d => d.satuanPendidikan === sat && d.createdByRole !== 'supervisor_lpis');
+                    const satT = satData.reduce((acc, s) => acc + (s.detailPertemuan?.length || 0), 0);
+                    gridHtml += `
+                        <div class="card" style="padding: 1.25rem; background: ${theme.bg}; border-top: 4px solid ${theme.border}; position: relative; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)';">
+                            <div style="position: absolute; top: -15px; right: -15px; width: 80px; height: 80px; background: ${theme.iconBg}; border-radius: 50%;"></div>
+                            <div class="font-bold text-main" style="font-size: 0.95rem; line-height: 1.3; margin-bottom: 0.85rem; display: flex; align-items: flex-start; gap: 6px; position: relative; z-index: 1;"><i class="material-icons-round" style="color: ${theme.border}; font-size: 1.15rem; margin-top: -1px;">domain</i> <span style="flex:1;">${sat}</span></div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: rgba(255,255,255,0.8); padding: 0.65rem 0.75rem; border-radius: 0.65rem; border: 1px solid rgba(0,0,0,0.06); position: relative; z-index: 1;">
+                                <div style="border-right: 1px solid rgba(0,0,0,0.08); padding-right: 0.5rem;">
+                                    <div class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;">Laporan</div>
+                                    <div style="font-size: 1.85rem; font-weight: 800; color: ${theme.border}; line-height: 1.1; margin-top: 2px; font-family: var(--font-display);">${satData.length}</div>
+                                </div>
+                                <div style="padding-left: 0.25rem;">
+                                    <div class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;">Temuan</div>
+                                    <div style="font-size: 1.85rem; font-weight: 800; color: #d97706; line-height: 1.1; margin-top: 2px; font-family: var(--font-display);">${satT}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // Tambahan khusus untuk Supervisor LPIS (Hanya dilihat Admin dan Supervisor LPIS)
+                if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis')) {
+                    const lpisData = dashData.filter(d => d.createdByRole === 'supervisor_lpis');
+                    const lpisT = lpisData.reduce((acc, s) => acc + (s.detailPertemuan?.length || 0), 0);
+
+                    const lpisBySatuan = {};
+                    lpisData.forEach(d => {
+                        const sat = d.satuanPendidikan || 'Lainnya';
+                        if (!lpisBySatuan[sat]) {
+                            lpisBySatuan[sat] = { laporan: 0, temuan: 0 };
+                        }
+                        lpisBySatuan[sat].laporan += 1;
+                        lpisBySatuan[sat].temuan += (d.detailPertemuan?.length || 0);
+                    });
+
+                    let breakdownHtml = '';
+                    const entries = Object.entries(lpisBySatuan);
+                    if (entries.length === 0) {
+                        breakdownHtml = `<div style="color: #a21caf; font-size: 0.75rem; font-style: italic; margin-top: 0.65rem; padding-top: 0.5rem; border-top: 1px dashed rgba(192,38,211,0.25);">Belum ada temuan dari Supervisor LPIS</div>`;
+                    } else {
+                        breakdownHtml = `<div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed rgba(192,38,211,0.25);">
+                            <div style="font-size: 0.725rem; font-weight: 800; color: #86198f; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 4px;">
+                                <i class="material-icons-round" style="font-size: 0.95rem;">read_more</i> Rincian Per Satuan:
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.35rem; max-height: 180px; overflow-y: auto;">`;
+                        entries.forEach(([satName, stat]) => {
+                            breakdownHtml += `
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.9); padding: 0.35rem 0.6rem; border-radius: 0.5rem; border: 1px solid rgba(192,38,211,0.15); font-size: 0.75rem;">
+                                    <span style="font-weight: 600; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;" title="${satName}">${satName}</span>
+                                    <span style="font-weight: 700; color: #c026d3; font-family: var(--font-display); background: #fdf4ff; padding: 1px 6px; border-radius: 4px; border: 1px solid #fae8ff;">
+                                        ${stat.temuan} Temuan <span style="font-weight:400; color:#9333ea; font-size:0.7rem;">(${stat.laporan} Lap.)</span>
+                                    </span>
+                                </div>`;
+                        });
+                        breakdownHtml += `</div></div>`;
+                    }
+
+                    gridHtml += `
+                        <div class="card" style="padding: 1.25rem; background: linear-gradient(145deg, #ffffff 0%, #fdf4ff 100%); border-top: 4px solid #c026d3; position: relative; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)';">
+                            <div style="position: absolute; top: -15px; right: -15px; width: 80px; height: 80px; background: rgba(192,38,211,0.1); border-radius: 50%;"></div>
+                            <div class="font-bold text-main" style="font-size: 0.95rem; line-height: 1.3; margin-bottom: 0.85rem; display: flex; align-items: flex-start; gap: 6px; position: relative; z-index: 1;"><i class="material-icons-round" style="color: #c026d3; font-size: 1.15rem; margin-top: -1px;">admin_panel_settings</i> <span style="flex:1;">Temuan Supervisor LPIS</span></div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: rgba(255,255,255,0.8); padding: 0.65rem 0.75rem; border-radius: 0.65rem; border: 1px solid rgba(0,0,0,0.06); position: relative; z-index: 1;">
+                                <div style="border-right: 1px solid rgba(0,0,0,0.08); padding-right: 0.5rem;">
+                                    <div class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;">Laporan</div>
+                                    <div style="font-size: 1.85rem; font-weight: 800; color: #c026d3; line-height: 1.1; margin-top: 2px; font-family: var(--font-display);">${lpisData.length}</div>
+                                </div>
+                                <div style="padding-left: 0.25rem;">
+                                    <div class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;">Temuan</div>
+                                    <div style="font-size: 1.85rem; font-weight: 800; color: #d97706; line-height: 1.1; margin-top: 2px; font-family: var(--font-display);">${lpisT}</div>
+                                </div>
+                            </div>
+                            ${breakdownHtml}
+                        </div>
+                    `;
+                }
+
+                gridContainer.innerHTML = gridHtml;
+            }
+
+            const container = document.getElementById('recent-supervisi-list'); container.innerHTML = ''; const recentData = globalSupervisiData.slice(0, 5);
+            if(recentData.length === 0) container.innerHTML = '<div class="p-4 text-center text-muted">Belum ada data.</div>';
+            recentData.forEach(s => {
+                const totalTemuan = s.detailPertemuan?.length || 0;
+                let badgeHTML = `<div style="background:#f1f5f9; padding:0.3rem 0.6rem; border-radius:1rem; font-size:0.75rem; color:var(--primary); font-weight:bold; margin-bottom: 4px;">${totalTemuan} Temuan</div>`;
+                container.innerHTML += `<div class="flex justify-between items-center" style="padding: 0.75rem 0; border-bottom: 1px solid var(--border);"><div><div class="font-semibold text-sm">${s.satuanPendidikan}</div><div class="text-xs text-muted">${s.tanggal}</div></div><div class="text-right">${badgeHTML}</div></div>`;
+            });
+        };
+        if(globalSupervisiData.length === 0) loadRekapitulasi().then(updateStats); else updateStats();
+    }
+
+    // Export & Print Logic
+    window.generateLaporan = () => {
+        const bln = document.getElementById('cetak-bulan').value; let filtered = globalSupervisiData;
+        let currentSatuan = (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') ? 'Semua Satuan Pendidikan (Rekap)' : currentUser.satuanPendidikan;
+        const satFilter = document.getElementById('cetak-satuan').value;
+        if((currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') && satFilter !== 'Semua') {
+            currentSatuan = satFilter;
+            filtered = filtered.filter(s => s.satuanPendidikan === satFilter);
+        }
+        if(bln !== 'Semua') filtered = filtered.filter(s => s.bulan === bln);
+        window.setText('print-satuan', currentSatuan); window.setText('print-bulan-tahun', bln === 'Semua' ? `Semua Bulan ${new Date().getFullYear()}` : `${bln} ${new Date().getFullYear()}`);
+        const tbody = document.getElementById('tbody-cetak'); tbody.innerHTML = '';
+        if(filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; border: 1px solid black; padding: 10px;">Tidak ada data.</td></tr>'; } 
+        else {
+            let nomor = 1;
+            filtered.forEach(s => {
+                let txtTgl = s.tanggal; try { const d = new Date(s.tanggal); txtTgl = `${['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()]}, ${d.getDate()} ${['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][d.getMonth()]} ${d.getFullYear()}`; } catch(e){}
+                s.detailPertemuan.forEach((d, i) => {
+                    const tr = document.createElement('tr'); let html = '';
+                    if(i === 0) { html += `<td rowspan="${s.detailPertemuan.length}" style="border: 1px solid black; text-align: center; padding: 6px;">${nomor++}</td><td rowspan="${s.detailPertemuan.length}" style="border: 1px solid black; padding: 6px; white-space: nowrap;">${txtTgl}</td><td rowspan="${s.detailPertemuan.length}" style="border: 1px solid black; text-align: center; padding: 6px;">${s.waktu}</td>`; }
+                    html += `<td style="border: 1px solid black; padding: 6px;">${d.nama ? `<strong>Nama:</strong> ${d.nama}<br><br>` : ''}${d.temuan}</td><td style="border: 1px solid black; padding: 6px;">${d.langkah}</td>`; tr.innerHTML = html; tbody.appendChild(tr);
+                });
+            });
+        }
+        document.getElementById('print-area').classList.remove('hidden'); showToast("Laporan dimuat. Siap dicetak.", "success");
+        
+        let kepsekName = '____________________', nipyKepsek = '____________________', tuName = '____________________', nipyTU = '____________________';
+        if ((currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') && satFilter !== 'Semua') {
+            const userAkun = globalUsers.find(u => u.satuanPendidikan === satFilter);
+            if (userAkun) { kepsekName = userAkun.kepsek || kepsekName; nipyKepsek = userAkun.nipyKepsek || nipyKepsek; tuName = userAkun.kepalaTU || tuName; nipyTU = userAkun.nipyTU || nipyTU; }
+        } else if (currentUser.role === 'user') {
+            kepsekName = currentUser.kepsek || currentUser.namaSupervisor; nipyKepsek = currentUser.nipyKepsek || nipyKepsek; tuName = currentUser.kepalaTU || tuName; nipyTU = currentUser.nipyTU || nipyTU;
+        }
+
+        window.setText('print-sign-kepsek', kepsekName);
+        window.setText('print-nipy-kepsek', nipyKepsek);
+        window.setText('print-sign-tu', tuName);
+        window.setText('print-nipy-tu', nipyTU);
+        const tdy = new Date(); window.setText('print-date-today', `${tdy.getDate()} ${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][tdy.getMonth()]} ${tdy.getFullYear()}`);
+    };
+
+    window.exportToExcel = () => {
+        showToast("Menyiapkan unduhan Excel...", "info");
+        const satuan = document.getElementById('print-satuan')?.innerText || '-';
+        const bulan = document.getElementById('print-bulan-tahun')?.innerText || '-';
+        const kepsek = document.getElementById('print-sign-kepsek')?.innerText || '_________________';
+        const nipyKepsek = document.getElementById('print-nipy-kepsek')?.innerText || '_________________';
+        const tu = document.getElementById('print-sign-tu')?.innerText || '_________________';
+        const nipyTU = document.getElementById('print-nipy-tu')?.innerText || '_________________';
+        const today = document.getElementById('print-date-today')?.innerText || '-';
+
+        const tbody = document.getElementById('tbody-cetak');
+        let rowsHtml = '';
+        if (tbody) {
+            const trs = tbody.querySelectorAll('tr');
+            trs.forEach(tr => {
+                let trHtml = '<tr>';
+                const tds = tr.querySelectorAll('td');
+                tds.forEach((td, i) => {
+                    const align = (i === 0 || i === 2) ? 'text-align:center;' : 'text-align:left;';
+                    trHtml += `<td style="border:1px solid #000000; padding:6px 10px; vertical-align:top; font-size:11pt; font-family:'Times New Roman', Times, serif; ${align}">${td.innerHTML}</td>`;
+                });
+                trHtml += '</tr>';
+                rowsHtml += trHtml;
+            });
+        }
+
+        const htmlContent = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                <!--[if gte mso 9]>
+                <xml>
+                    <x:ExcelWorkbook>
+                        <x:ExcelWorksheets>
+                            <x:ExcelWorksheet>
+                                <x:Name>Jurnal Supervisi</x:Name>
+                                <x:WorksheetOptions>
+                                    <x:DisplayGridlines/>
+                                </x:WorksheetOptions>
+                            </x:ExcelWorksheet>
+                        </x:ExcelWorksheets>
+                    </x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
+                <style>
+                    body { font-family: 'Times New Roman', Times, serif; }
+                    table { border-collapse: collapse; width: 100%; }
+                    .data-table th { background-color: #10b981; color: #ffffff; border: 1px solid #000000; font-size: 11pt; font-weight: bold; text-align: center; padding: 8px; }
+                    .data-table td { border: 1px solid #000000; padding: 6px; font-size: 11pt; vertical-align: top; }
+                </style>
+            </head>
+            <body>
+                <table style="width:100%; margin-bottom:15px;">
+                    <tr>
+                        <td colspan="5" style="text-align:center; font-size:14pt; font-weight:bold; font-family:'Times New Roman', Times, serif;">JURNAL SUPERVISI</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="text-align:center; font-size:14pt; font-weight:bold; font-family:'Times New Roman', Times, serif;">KEBERSIHAN, KERAPIAN DAN PERAWATAN SARPRAS</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="text-align:center; font-size:14pt; font-weight:bold; font-family:'Times New Roman', Times, serif;">LPI SABILILLAH MALANG</td>
+                    </tr>
+                </table>
+
+                <br>
+                <table style="margin-bottom:15px; width:100%; font-size:11pt; font-family:'Times New Roman', Times, serif;">
+                    <tr>
+                        <td style="width:160px; font-weight:bold;">Satuan Pendidikan</td>
+                        <td colspan="4">: ${satuan}</td>
+                    </tr>
+                    <tr>
+                        <td style="width:160px; font-weight:bold;">Bulan</td>
+                        <td colspan="4">: ${bulan}</td>
+                    </tr>
+                </table>
+
+                <table class="data-table" style="width:100%; border-collapse:collapse; margin-bottom:25px; font-family:'Times New Roman', Times, serif;">
+                    <thead>
+                        <tr style="background-color:#10b981; color:#ffffff;">
+                            <th style="border:1px solid #000000; background-color:#10b981; color:#ffffff; font-weight:bold; text-align:center; padding:8px; width:5%;">No</th>
+                            <th style="border:1px solid #000000; background-color:#10b981; color:#ffffff; font-weight:bold; text-align:center; padding:8px; width:20%;">Hari, Tanggal</th>
+                            <th style="border:1px solid #000000; background-color:#10b981; color:#ffffff; font-weight:bold; text-align:center; padding:8px; width:10%;">Waktu</th>
+                            <th style="border:1px solid #000000; background-color:#10b981; color:#ffffff; font-weight:bold; text-align:center; padding:8px; width:35%;">Catatan Temuan</th>
+                            <th style="border:1px solid #000000; background-color:#10b981; color:#ffffff; font-weight:bold; text-align:center; padding:8px; width:30%;">Langkah yang di ambil</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+
+                <br><br>
+                <table style="width:100%; margin-top:20px; font-size:11pt; font-family:'Times New Roman', Times, serif;">
+                    <tr>
+                        <td colspan="2" style="width:50%; text-align:left; vertical-align:top;">
+                            Mengetahui,<br>
+                            Kepala Sekolah<br><br><br><br>
+                            <strong>${kepsek}</strong><br>
+                            NIPY. ${nipyKepsek}
+                        </td>
+                        <td colspan="3" style="width:50%; text-align:left; vertical-align:top;">
+                            Malang, ${today}<br>
+                            Kepala TU,<br><br><br><br>
+                            <strong>${tu}</strong><br>
+                            NIPY. ${nipyTU}
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const bulanVal = document.getElementById('cetak-bulan').value || 'Supervisi';
+        a.download = `Jurnal_Supervisi_${bulanVal}.xls`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Berhasil mengunduh Excel Jurnal!", "success");
+    };
+
+    window.exportToPDF = async () => {
+        if(!window.jspdf || !window.jspdf.jsPDF) return showToast("Pustaka PDF gagal dimuat", "error");
+        showToast("Menyiapkan PDF...", "info"); const doc = new window.jspdf.jsPDF('l', 'mm', 'a4');
+        let logoData = null; try { const imgEl = document.getElementById('print-logo'); if(imgEl) { const canvas = document.createElement('canvas'); canvas.width = imgEl.naturalWidth || 75; canvas.height = imgEl.naturalHeight || 75; const ctx = canvas.getContext('2d'); ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height); logoData = canvas.toDataURL('image/png'); } } catch(e) {}
+        if(logoData) doc.addImage(logoData, 'PNG', 65, 12, 16, 16);
+        doc.setFontSize(12); doc.setFont("times", "bold");
+        doc.text("JURNAL SUPERVISI", 148.5, 14, { align: "center" }); doc.text("KEBERSIHAN, KERAPIAN DAN PERAWATAN SARPRAS", 148.5, 20, { align: "center" }); doc.text("LPI SABILILLAH MALANG", 148.5, 26, { align: "center" });
+        doc.setFontSize(11); doc.setFont("times", "normal");
+        const satuan = (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') ? 'Semua Satuan Pendidikan (Rekap)' : (currentUser.satuanPendidikan || '-');
+        const bln = document.getElementById('cetak-bulan').value; const thn = new Date().getFullYear();
+        doc.text(`Satuan Pendidikan`, 14, 40); doc.text(`: ${satuan}`, 45, 40); doc.text(`Bulan`, 14, 46); doc.text(`: ${bln === 'Semua' ? 'Semua Bulan' : bln} ${thn}`, 45, 46);
+        doc.autoTable({ 
+            html: '#table-cetak', 
+            startY: 52, 
+            theme: 'grid', 
+            styles: { font: 'times', fontSize: 10, textColor: 0, lineColor: 0, lineWidth: 0.2, cellPadding: 2, overflow: 'linebreak' }, 
+            headStyles: { fillColor: [16, 185, 129], textColor: 255, halign: 'center', fontStyle: 'bold' }, 
+            columnStyles: { 
+                0: { cellWidth: 14, halign: 'center' }, 
+                1: { cellWidth: 50 }, 
+                2: { cellWidth: 25, halign: 'center' }, 
+                3: { cellWidth: 90 }, 
+                4: { cellWidth: 90 } 
+            }, 
+            margin: { left: 14, right: 14 } 
+        });
+        let finalY = doc.lastAutoTable.finalY || 52; if (finalY + 45 > 200) { doc.addPage(); finalY = 20; }
+        const tdy = new Date(); const strTgl = `${tdy.getDate()} ${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][tdy.getMonth()]} ${tdy.getFullYear()}`;
+        
+        let kepsekName = '____________________', nipyKepsek = '____________________', tuName = '____________________', nipyTU = '____________________';
+        const satFilterPDF = document.getElementById('cetak-satuan').value;
+        if ((currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') && satFilterPDF !== 'Semua') {
+            const userAkun = globalUsers.find(u => u.satuanPendidikan === satFilterPDF);
+            if (userAkun) { kepsekName = userAkun.kepsek || kepsekName; nipyKepsek = userAkun.nipyKepsek || nipyKepsek; tuName = userAkun.kepalaTU || tuName; nipyTU = userAkun.nipyTU || nipyTU; }
+        } else if (currentUser.role === 'user') {
+            kepsekName = currentUser.kepsek || currentUser.namaSupervisor; nipyKepsek = currentUser.nipyKepsek || nipyKepsek; tuName = currentUser.kepalaTU || tuName; nipyTU = currentUser.nipyTU || nipyTU;
+        }
+
+        doc.text("Mengetahui,", 20, finalY + 12); doc.text("Kepala Sekolah", 20, finalY + 17);
+        doc.text(kepsekName, 20, finalY + 37); doc.text(`NIPY. ${nipyKepsek}`, 20, finalY + 42);
+        doc.text(`Malang, ${strTgl}`, 210, finalY + 12); doc.text("Kepala TU,", 210, finalY + 17);
+        doc.text(tuName, 210, finalY + 37); doc.text(`NIPY. ${nipyTU}`, 210, finalY + 42);
+        doc.save(`Jurnal_Supervisi_${bln}.pdf`);
+    };
+
+    // User & Settings Management
+    let globalUsers = [];
+    window.saveUserAccount = async () => {
+        const idInput = document.getElementById('akun-edit-id').value; const sekolah = document.getElementById('akun-sekolah').value; const kepsek = document.getElementById('akun-kepsek').value; const tu = document.getElementById('akun-tu').value; const username = document.getElementById('akun-username').value; const pass = document.getElementById('akun-password').value;
+        const nipyKepsek = document.getElementById('akun-nipy-kepsek').value; const nipyTU = document.getElementById('akun-nipy-tu').value; const roleInput = document.getElementById('akun-role').value;
+        try {
+            if (IS_PREVIEW) {
+                if (idInput) { const idx = window.mockUsers.findIndex(u => u.id === idInput); if (idx > -1) window.mockUsers[idx] = { ...window.mockUsers[idx], username, password: pass, satuanPendidikan: sekolah, kepsek, nipyKepsek, kepalaTU: tu, nipyTU, namaSupervisor: kepsek, role: roleInput }; } 
+                else { window.mockUsers.push({ id: "user-" + Date.now(), username, password: pass, satuanPendidikan: sekolah, kepsek, nipyKepsek, kepalaTU: tu, nipyTU, role: roleInput, namaSupervisor: kepsek }); const cekAda = globalSettings.sekolahList.some(x => x.nama === sekolah); if(!cekAda && roleInput === 'user') { globalSettings.sekolahList.push({nama: sekolah, supervisor: kepsek}); renderSettingsSekolah(); populateInputDropdowns(); } }
+            } else {
+                let finalId = idInput || username; 
+                await setDoc(doc(db, "users", finalId), { username, password: pass, satuanPendidikan: sekolah, kepsek, nipyKepsek, kepalaTU: tu, nipyTU, role: roleInput, namaSupervisor: kepsek });
+                const cekAda = globalSettings.sekolahList.some(x => x.nama === sekolah); if(!cekAda && roleInput === 'user') { globalSettings.sekolahList.push({nama: sekolah, supervisor: kepsek}); await saveSettingsToDB(); }
+            }
+            showToast(idInput ? "Data akun diperbarui!" : "Akun baru disimpan!", "success"); window.resetAkunForm(); window.loadAkunData();
+        } catch(e) { showToast("Gagal menyimpan akun", "error"); }
+    };
+
+    window.resetAkunForm = () => { ['akun-edit-id','akun-sekolah','akun-kepsek','akun-nipy-kepsek','akun-tu','akun-nipy-tu','akun-username','akun-password'].forEach(id => document.getElementById(id).value = ''); document.getElementById('akun-role').value = 'user'; window.setText('form-akun-title', 'Tambah Akun Baru'); window.setText('btn-submit-akun', 'Simpan Akun'); document.getElementById('btn-batal-akun').classList.add('hidden'); };
+
+    window.editUser = (id) => {
+        const uList = IS_PREVIEW ? window.mockUsers : globalUsers; const user = uList.find(u => u.id === id); if (!user) return;
+        document.getElementById('akun-edit-id').value = user.id; document.getElementById('akun-sekolah').value = user.satuanPendidikan || ''; document.getElementById('akun-kepsek').value = user.kepsek || user.namaSupervisor || ''; document.getElementById('akun-nipy-kepsek').value = user.nipyKepsek || ''; document.getElementById('akun-tu').value = user.kepalaTU || ''; document.getElementById('akun-nipy-tu').value = user.nipyTU || ''; document.getElementById('akun-username').value = user.username || ''; document.getElementById('akun-password').value = user.password || ''; document.getElementById('akun-role').value = user.role || 'user';
+        window.setText('form-akun-title', 'Edit Data Akun'); window.setText('btn-submit-akun', 'Perbarui Data Akun'); document.getElementById('btn-batal-akun').classList.remove('hidden'); document.getElementById('view-akun').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.loadAkunData = async () => {
+        const tbody = document.getElementById('tbody-akun'); if(!tbody) return; tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>';
+        try {
+            globalUsers = []; if(IS_PREVIEW) { globalUsers = window.mockUsers; } else { const snap = await getDocs(collection(db, "users")); snap.forEach(doc => globalUsers.push({ id: doc.id, ...doc.data() })); }
+            tbody.innerHTML = ''; const dataHanyaUser = globalUsers.filter(u => u.role !== 'admin');
+            if (dataHanyaUser.length === 0) { tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="material-icons-round">group_off</i><p>Belum ada data akun.</p></div></td></tr>'; return; }
+            dataHanyaUser.forEach(u => {
+                let roleBadge = u.role === 'supervisor_lpis' ? '<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 3px 6px; border-radius: 4px; margin-left: 6px; font-family: sans-serif; font-weight: bold; vertical-align: middle;">SUPERVISOR LPIS</span>' : '<span style="font-size: 0.7rem; background: #64748b; color: white; padding: 3px 6px; border-radius: 4px; margin-left: 6px; font-family: sans-serif; font-weight: bold; vertical-align: middle;">SATUAN</span>';
+                let unameStyle = u.role === 'supervisor_lpis' ? 'background: #fffbeb; border: 1px solid #fde68a; color: #b45309;' : 'background: #eff6ff; border: 1px solid #bfdbfe; color: var(--primary);';
+                tbody.innerHTML += `<tr><td><div class="font-semibold text-main text-sm">${u.satuanPendidikan}</div></td><td><span style="padding: 4px 8px; border-radius: 6px; font-weight: 600; font-family: monospace; font-size:0.85rem; display: inline-block; ${unameStyle}">${u.username}</span>${roleBadge}</td><td><div style="font-weight: 600; font-size: 0.85rem; color: var(--text-main);"><span style="color: var(--primary); font-size: 0.65rem; font-weight: 800; background: #eef2ff; padding: 3px 5px; border-radius: 4px; line-height: 1;">KS</span> ${u.kepsek || u.namaSupervisor || '-'}</div></td><td><div style="font-size: 0.85rem; color: var(--text-muted);"><span style="color: #64748b; font-size: 0.65rem; font-weight: 800; background: #f1f5f9; padding: 3px 5px; border-radius: 4px; line-height: 1;">TU</span> ${u.kepalaTU || '-'}</div></td><td><div class="action-group"><button class="btn-action edit" onclick="window.editUser('${u.id}')"><i class="material-icons-round">edit</i></button><button class="btn-action delete" onclick="window.deleteUser('${u.id}')"><i class="material-icons-round">delete</i></button></div></td></tr>`;
+            });
+        } catch(e) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Gagal memuat</td></tr>'; }
+    };
+    
+    window.deleteUser = (id) => window.showConfirmModal("Hapus Akun", "Anda yakin ingin menghapus akun ini?", async () => { try { if(IS_PREVIEW) window.mockUsers = window.mockUsers.filter(u => u.id !== id); else await deleteDoc(doc(db, "users", id)); window.loadAkunData(); showToast("Akun berhasil dihapus", "success"); } catch(e) { showToast("Gagal hapus", "error"); } });
+
+    window.loadSettings = async function loadSettings() {
+        try {
+            if (IS_PREVIEW) globalSettings = window.mockSettings; else { const snap = await getDoc(doc(db, "settings", "master")); if (snap.exists()) globalSettings = snap.data(); }
+            window.renderSettingsTahun(); window.renderSettingsSekolah(); window.populateInputDropdowns();
+        } catch(e) {}
+    };
+
+    window.renderSettingsTahun = function renderSettingsTahun() { const t = document.getElementById('tbody-setting-tahun'); if(!t) return; t.innerHTML = ''; globalSettings.tahunAjaran.forEach((th, i) => t.innerHTML += `<tr><td>${th}</td><td><div class="action-group"><button class="btn-action edit" onclick="window.editTahunAjaran(${i})"><i class="material-icons-round">edit</i></button><button class="btn-action delete" onclick="window.hapusTahunAjaran(${i})"><i class="material-icons-round">delete</i></button></div></td></tr>`); };
+    window.renderSettingsSekolah = function renderSettingsSekolah() { const t = document.getElementById('tbody-setting-sekolah'); if(!t) return; t.innerHTML = ''; globalSettings.sekolahList.forEach((sek, i) => t.innerHTML += `<tr><td>${sek.nama}</td><td>${sek.supervisor}</td><td><div class="action-group"><button class="btn-action edit" onclick="window.editSekolah(${i})"><i class="material-icons-round">edit</i></button><button class="btn-action delete" onclick="window.hapusSekolah(${i})"><i class="material-icons-round">delete</i></button></div></td></tr>`); };
+    
+    window.populateInputDropdowns = function populateInputDropdowns() {
+        const [selSatuan, selTahun, filterTahun] = ['input-satuan', 'input-tahun', 'filter-rekap-tahun'].map(id => document.getElementById(id)); if(!selSatuan || !selTahun) return;
+        const [curTahun, curSatuan] = [selTahun.value, selSatuan.value];
+        selTahun.innerHTML = '<option value="">-- Pilih --</option>'; filterTahun.innerHTML = '<option value="Semua">Semua Tahun</option>';
+        globalSettings.tahunAjaran.forEach(th => { selTahun.innerHTML += `<option value="${th}">${th}</option>`; filterTahun.innerHTML += `<option value="${th}">${th}</option>`; });
+        selSatuan.innerHTML = '<option value="">-- Pilih --</option>';
+        const selCetakSatuan = document.getElementById('cetak-satuan');
+        const selChartSatuan = document.getElementById('chart-filter-satuan');
+        const selFilterRekapSatuan = document.getElementById('filter-rekap-satuan');
+        if(selCetakSatuan) selCetakSatuan.innerHTML = '<option value="Semua">-- Semua Satuan --</option><option value="Temuan Supervisor LPI">Temuan Supervisor LPI</option>';
+        if(selChartSatuan) selChartSatuan.innerHTML = '<option value="Semua">Semua Satuan</option><option value="Temuan Supervisor LPI">Temuan Supervisor LPI</option>';
+        if(selFilterRekapSatuan) selFilterRekapSatuan.innerHTML = '<option value="Semua">Semua Satuan</option><option value="Temuan Supervisor LPI">Temuan Supervisor LPI</option>';
+        globalSettings.sekolahList.forEach(sek => {
+            selSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
+            if(selCetakSatuan) selCetakSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
+            if(selChartSatuan) selChartSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
+            if(selFilterRekapSatuan) selFilterRekapSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
+        });
+        if(curTahun) selTahun.value = curTahun;
+        if(currentUser?.role === 'user') {
+            const userSatuan = currentUser.satuanPendidikan;
+            if (userSatuan && !globalSettings.sekolahList.find(s => s.nama === userSatuan)) {
+                selSatuan.innerHTML += `<option value="${userSatuan}">${userSatuan}</option>`;
+                if(selCetakSatuan) selCetakSatuan.innerHTML += `<option value="${userSatuan}">${userSatuan}</option>`;
+                if(selChartSatuan) selChartSatuan.innerHTML += `<option value="${userSatuan}">${userSatuan}</option>`;
+                if(selFilterRekapSatuan) selFilterRekapSatuan.innerHTML += `<option value="${userSatuan}">${userSatuan}</option>`;
+            }
+            selSatuan.value = userSatuan;
+            selSatuan.disabled = true;
+            selSatuan.style.backgroundColor = '#f1f5f9';
+            selSatuan.style.color = '#64748b';
+            selSatuan.style.cursor = 'not-allowed';
+            selSatuan.style.borderColor = '#cbd5e1';
+            selSatuan.style.fontWeight = '600';
+        } else {
+            if(curSatuan) selSatuan.value = curSatuan;
+            selSatuan.disabled = false;
+            selSatuan.style.backgroundColor = '';
+            selSatuan.style.color = '';
+            selSatuan.style.cursor = '';
+            selSatuan.style.borderColor = '';
+            selSatuan.style.fontWeight = '';
+        }
+        window.autoFillSupervisor();
+    };
+
+    window.autoFillSupervisor = () => { 
+        if (currentUser?.role === 'user') {
+            document.getElementById('input-nama').value = currentUser.kepalaTU || currentUser.namaSupervisor || '';
+        } else if (currentUser?.role === 'supervisor_lpis') {
+            document.getElementById('input-nama').value = currentUser.namaSupervisor || currentUser.kepsek || 'Supervisor LPIS';
+        } else {
+            const m = globalSettings.sekolahList.find(sek => sek.nama === document.getElementById('input-satuan').value); 
+            document.getElementById('input-nama').value = m ? m.supervisor : ''; 
+        }
+    };
+    window.autoFillBulan = () => { const t = document.getElementById('input-tanggal').value; if(t) { const d = new Date(t); if(d.toString() !== 'Invalid Date') { const ms = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; document.getElementById('input-bulan').value = ms[d.getMonth()]; } } else { document.getElementById('input-bulan').value = ''; } };
+    window.addTahunAjaran = async () => { const val = document.getElementById('setting-tahun').value; if(!globalSettings.tahunAjaran.includes(val)) { globalSettings.tahunAjaran.push(val); await window.saveSettingsToDB(); document.getElementById('setting-tahun').value = ''; } };
+    window.hapusTahunAjaran = (idx) => window.showConfirmModal("Hapus", "Yakin hapus tahun ajaran?", async () => { globalSettings.tahunAjaran.splice(idx, 1); await window.saveSettingsToDB(); });
+    window.editTahunAjaran = (idx) => {
+        const currentVal = globalSettings.tahunAjaran[idx];
+        const modal = document.getElementById('custom-edit-modal-overlay');
+        window.setText('edit-modal-title', 'Edit Tahun Ajaran');
+        const body = document.getElementById('edit-modal-body');
+        body.innerHTML = `
+            <div class="form-group" style="margin:0;">
+                <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-main); display:block;">Tahun Ajaran</label>
+                <input type="text" id="edit-input-tahun" value="${currentVal}" required placeholder="Contoh: 2024/2025" style="width:100%; box-sizing:border-box;">
+            </div>
+        `;
+        modal.classList.remove('hidden');
+        setTimeout(() => document.getElementById('edit-input-tahun')?.focus(), 100);
+
+        document.getElementById('form-custom-edit').onsubmit = async (e) => {
+            e.preventDefault();
+            const newVal = document.getElementById('edit-input-tahun').value.trim();
+            if (!newVal) return showToast("Tahun ajaran tidak boleh kosong!", "error");
+            globalSettings.tahunAjaran[idx] = newVal;
+            await window.saveSettingsToDB();
+            modal.classList.add('hidden');
+            showToast("Tahun ajaran berhasil diperbarui!", "success");
+        };
+    };
+    window.addSekolah = async () => { const n = document.getElementById('setting-sekolah').value, s = document.getElementById('setting-supervisor').value; if(!globalSettings.sekolahList.some(x => x.nama === n)) { globalSettings.sekolahList.push({nama: n, supervisor: s}); await window.saveSettingsToDB(); document.getElementById('setting-sekolah').value = ''; document.getElementById('setting-supervisor').value = '';} };
+    window.hapusSekolah = (idx) => window.showConfirmModal("Hapus", "Yakin hapus sekolah?", async () => { globalSettings.sekolahList.splice(idx, 1); await window.saveSettingsToDB(); });
+    window.editSekolah = (idx) => {
+        const current = globalSettings.sekolahList[idx];
+        const modal = document.getElementById('custom-edit-modal-overlay');
+        window.setText('edit-modal-title', 'Edit Satuan & Supervisor');
+        const body = document.getElementById('edit-modal-body');
+        body.innerHTML = `
+            <div class="form-group" style="margin:0;">
+                <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-main); display:block;">Nama Satuan Pendidikan / Sekolah</label>
+                <input type="text" id="edit-input-sekolah-nama" value="${current.nama}" required style="width:100%; box-sizing:border-box;">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-main); display:block;">Nama Supervisor / Kepala Sekolah</label>
+                <input type="text" id="edit-input-sekolah-spv" value="${current.supervisor}" required style="width:100%; box-sizing:border-box;">
+            </div>
+        `;
+        modal.classList.remove('hidden');
+        setTimeout(() => document.getElementById('edit-input-sekolah-nama')?.focus(), 100);
+
+        document.getElementById('form-custom-edit').onsubmit = async (e) => {
+            e.preventDefault();
+            const newNama = document.getElementById('edit-input-sekolah-nama').value.trim();
+            const newSpv = document.getElementById('edit-input-sekolah-spv').value.trim();
+            if (!newNama || !newSpv) return showToast("Semua bidang harus diisi!", "error");
+            globalSettings.sekolahList[idx] = { nama: newNama, supervisor: newSpv };
+            await window.saveSettingsToDB();
+            modal.classList.add('hidden');
+            showToast("Data sekolah berhasil diperbarui!", "success");
+        };
+    };
+    window.saveSettingsToDB = async function saveSettingsToDB() { if(!IS_PREVIEW) await setDoc(doc(db, "settings", "master"), globalSettings); window.loadSettings(); showToast("Tersimpan!", "success"); };
+
+    window.addEventListener('DOMContentLoaded', initApp);
+
+    window.updateHeaderDateTime = function updateHeaderDateTime() {
+        const el = document.getElementById('header-datetime');
+        if (!el) return;
+        const now = new Date();
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        const day = days[now.getDay()];
+        const date = now.getDate();
+        const month = months[now.getMonth()];
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        el.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: #1e293b;">
+                <i class="material-icons-round" style="font-size: 1.1rem; color: #2563eb;">event</i>
+                <span>${day}, ${date} ${month} ${year}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 800; color: #1d4ed8; background: #eff6ff; padding: 0.25rem 0.65rem; border-radius: 0.5rem; border: 1px solid #bfdbfe;">
+                <i class="material-icons-round" style="font-size: 0.95rem; color: #2563eb;">schedule</i>
+                <span>${hours}.${minutes} WIB</span>
+            </div>
+        `;
+    }
+    setInterval(updateHeaderDateTime, 1000);
+    updateHeaderDateTime();
+    
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(error => {
+                console.log('SW registration failed:', error);
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
