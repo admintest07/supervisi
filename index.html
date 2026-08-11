@@ -454,6 +454,7 @@
             <a class="nav-item" data-target="cetak" onclick="navigate('cetak')"><i class="material-icons-round">print</i> <span>Cetak Laporan</span></a>
             <a class="nav-item hidden" id="nav-pengaturan" data-target="pengaturan" onclick="navigate('pengaturan')"><i class="material-icons-round">settings</i> <span>Pengaturan Data</span></a>
             <a class="nav-item hidden" id="nav-akun" data-target="akun" onclick="navigate('akun')"><i class="material-icons-round">manage_accounts</i> <span>Manajemen Akun</span></a>
+            <a class="nav-item hidden" id="nav-logtrail" data-target="logtrail" onclick="navigate('logtrail')"><i class="material-icons-round">history</i> <span>Log Trail</span></a>
             <a class="nav-item mobile-only" onclick="handleLogout()" style="color: var(--danger);"><i class="material-icons-round">logout</i></a>
         </div>
         <div class="user-profile">
@@ -527,10 +528,10 @@
                         <div class="section-header-icon blue">
                             <i class="material-icons-round" style="font-size: 1.15rem;">show_chart</i>
                         </div>
-                        <h3 style="color: #0369a1;">Tren Temuan Supervisi Bulanan</h3>
+                        <h3 id="title-tren-bulanan" style="color: #0369a1;">Tren Temuan Supervisi Bulanan</h3>
                     </div>
                     <div class="flex gap-2 flex-wrap">
-                        <select id="chart-filter-satuan" class="input-modern" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; border-color: #bae6fd; background-color: white;" onchange="updateDashboardChart()">
+                        <select id="chart-filter-satuan" class="input-modern" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; border-color: #bae6fd; background-color: white;" onchange="updateDashboardChart(); updateDailyChart();">
                             <option value="Semua">Semua Satuan</option>
                             <option value="TK Islam Sabilillah">TK Islam Sabilillah</option>
                             <option value="SD Islam Sabilillah">SD Islam Sabilillah</option>
@@ -556,6 +557,27 @@
                     </div>
                 </div>
                 <div class="chart-container"><canvas id="chart-temuan"></canvas></div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="section-header-box indigo">
+                    <div class="section-header-title">
+                        <div class="section-header-icon indigo">
+                            <i class="material-icons-round" style="font-size: 1.15rem;">timeline</i>
+                        </div>
+                        <h3 id="title-tren-harian" style="color: #3730a3;">Tren Temuan dalam 1 Bulan</h3>
+                    </div>
+                    <div class="flex gap-2 flex-wrap items-center">
+                        <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-color: #c7d2fe; color: #3730a3;" onclick="window.setQuickDateFilter('hari_ini')">Hari Ini</button>
+                        <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-color: #c7d2fe; color: #3730a3;" onclick="window.setQuickDateFilter('minggu_ini')">Minggu Ini</button>
+                        <span style="color: #cbd5e1;">|</span>
+                        <label class="text-xs font-semibold" style="color: #3730a3;">Dari</label>
+                        <input type="date" id="chart-daily-start" class="input-modern" style="padding: 0.3rem 0.5rem; font-size: 0.85rem; border-color: #c7d2fe; background-color: white;" onchange="updateDailyChart()">
+                        <label class="text-xs font-semibold" style="color: #3730a3;">Sampai</label>
+                        <input type="date" id="chart-daily-end" class="input-modern" style="padding: 0.3rem 0.5rem; font-size: 0.85rem; border-color: #c7d2fe; background-color: white;" onchange="updateDailyChart()">
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="chart-temuan-harian"></canvas></div>
             </div>
 
             <div class="section-header-box emerald">
@@ -611,17 +633,67 @@
 
             <div id="section-rekap">
                 <div class="card" style="margin-bottom: 1rem;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; align-items: end;">
-                        <div class="form-group" style="margin: 0;" id="container-filter-rekap-satuan"><label>Satuan Pendidikan</label><select id="filter-rekap-satuan" onchange="applyFilterRekap()"><option value="Semua">Semua Satuan</option></select></div>
-                        <div class="form-group" style="margin: 0;" id="container-filter-rekap-supervisor"><label>Nama Supervisor</label><select id="filter-rekap-supervisor" onchange="applyFilterRekap()"><option value="Semua">Semua Supervisor</option></select></div>
-                        <div class="form-group" style="margin: 0;"><label>Filter Bulan</label><select id="filter-rekap-bulan" onchange="applyFilterRekap()"><option value="Semua">Semua Bulan</option><option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option><option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option><option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option><option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option></select></div>
-                        <div class="form-group" style="margin: 0;"><label>Filter Tahun Ajaran</label><select id="filter-rekap-tahun" onchange="applyFilterRekap()"><option value="Semua">Semua Tahun</option></select></div>
-                        <div class="form-group" style="margin: 0;"><label>Dari Tanggal</label><input type="date" id="filter-rekap-start" onchange="applyFilterRekap()"></div>
-                        <div class="form-group" style="margin: 0;"><label>Sampai Tanggal</label><input type="date" id="filter-rekap-end" onchange="applyFilterRekap()"></div>
-                        <button class="btn btn-outline" style="height: 42px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onclick="resetFilterRekap()" title="Reset Filter"><i class="material-icons-round">filter_alt_off</i> Reset</button>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h3 style="margin: 0; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;"><i class="material-icons-round" style="color: var(--primary); font-size: 1.25rem;">filter_alt</i> Filter Data Supervisi</h3>
+                        <button class="btn btn-outline" style="padding: 0.4rem 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.85rem;" onclick="resetFilterRekap()" title="Reset Filter"><i class="material-icons-round" style="font-size: 1.1rem;">filter_alt_off</i> Reset Filter</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end;">
+                        <div class="form-group" style="margin: 0;" id="container-filter-rekap-satuan">
+                            <label style="font-weight: 600; color: var(--text-main);">Satuan Pendidikan</label>
+                            <select id="filter-rekap-satuan" onchange="applyFilterRekap()" style="background-color: #f8fafc; border-color: #cbd5e1; font-weight: 500;">
+                                <option value="Semua">Semua Satuan</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0;" id="container-filter-rekap-supervisor">
+                            <label style="font-weight: 600; color: var(--text-main);">Nama Supervisor</label>
+                            <select id="filter-rekap-supervisor" onchange="applyFilterRekap()" style="background-color: #f8fafc; border-color: #cbd5e1; font-weight: 500;">
+                                <option value="Semua">Semua Supervisor</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label>Filter Bulan</label>
+                            <select id="filter-rekap-bulan" onchange="applyFilterRekap()">
+                                <option value="Semua">Semua Bulan</option>
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label>Filter Tahun Ajaran</label>
+                            <select id="filter-rekap-tahun" onchange="applyFilterRekap()">
+                                <option value="Semua">Semua Tahun</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border-color);">
+                        <div class="form-group" style="margin: 0;">
+                            <label>Dari Tanggal</label>
+                            <input type="date" id="filter-rekap-start" onchange="applyFilterRekap()">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label>Sampai Tanggal</label>
+                            <input type="date" id="filter-rekap-end" onchange="applyFilterRekap()">
+                        </div>
                     </div>
                 </div>
 
+                <div id="satuan-filter-indicator" class="card" style="display: none; padding: 0.85rem 1.25rem; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px; margin-bottom: 1rem; color: #3730a3; font-weight: 600; font-size: 0.95rem; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="material-icons-round" style="font-size: 1.25rem; color: #4f46e5;">filter_alt</i>
+                        <span>Menampilkan Data Supervisi Satuan: <strong id="satuan-filter-name" style="color: #1e1b4b; background: #c7d2fe; padding: 3px 10px; border-radius: 6px; font-weight: 700; margin-left: 4px;"></strong></span>
+                    </div>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; background: #ffffff; border-color: #a5b4fc; color: #3730a3; font-weight: 600;" onclick="resetSatuanFilter()"><i class="material-icons-round" style="font-size: 1rem;">close</i> Tampilkan Semua Satuan</button>
+                </div>
                 <div class="card" style="padding: 0;">
                     <div class="table-container">
                         <table id="table-rekap">
@@ -681,8 +753,12 @@
             <div class="card hide-on-print" style="margin-bottom: 2rem;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end;">
                     <div class="form-group" style="margin: 0;">
-                        <label>Pilih Bulan</label>
-                        <select id="cetak-bulan"><option value="Semua">-- Semua Bulan --</option><option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option><option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option><option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option><option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option></select>
+                        <label>Tanggal Mulai</label>
+                        <input type="date" id="cetak-start-date" style="width: 100%; border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.6rem 0.8rem; font-family: inherit; font-size: 0.9rem; background: var(--card-bg); color: var(--text-main);">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label>Tanggal Akhir</label>
+                        <input type="date" id="cetak-end-date" style="width: 100%; border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.6rem 0.8rem; font-family: inherit; font-size: 0.9rem; background: var(--card-bg); color: var(--text-main);">
                     </div>
                     <div class="form-group" id="container-cetak-satuan" style="margin: 0; display: none;">
                         <label>Satuan Pendidikan</label>
@@ -814,13 +890,104 @@
             </div>
         </div>
 
+        <div id="view-logtrail" class="page-view">
+            <div class="page-header">
+                <div class="flex items-center gap-4">
+                    <button class="btn btn-outline btn-icon hidden-mobile" onclick="toggleSidebarDesktop()" style="border:none; box-shadow:none; background:transparent; padding:0; color:var(--text-main);"><i class="material-icons-round" style="font-size: 1.75rem;">menu</i></button>
+                    <div style="background: #3b82f6; color: white; padding: 0.75rem; border-radius: 0.75rem;"><i class="material-icons-round">history</i></div>
+                    <div>
+                        <h1 class="page-title">Log Trail & Riwayat Aktivitas</h1>
+                        <p class="text-muted text-sm">Riwayat jejak aktivitas dan riwayat transaksi data oleh User dan Admin</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Card -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="compact-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
+                    <div class="form-group" style="margin: 0;">
+                        <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-main); display:block;">Cari Kata Kunci</label>
+                        <input type="text" id="input-log-search" placeholder="Cari nama, tindakan, detail..." oninput="filterLogTrail()" style="padding: 0.7rem; border-radius: 0.5rem; border: 1px solid var(--border); width: 100%; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-main); display:block;">Filter Role</label>
+                        <select id="filter-log-role" onchange="filterLogTrail()" style="padding: 0.7rem; border-radius: 0.5rem; border: 1px solid var(--border); width: 100%; box-sizing: border-box;">
+                            <option value="Semua">Semua Role</option>
+                            <option value="admin">Admin</option>
+                            <option value="supervisor_lpis">Supervisor LPIS</option>
+                            <option value="user">User Satuan</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; color:var(--text-main); display:block;">Kategori Aktivitas</label>
+                        <select id="filter-log-kat" onchange="filterLogTrail()" style="padding: 0.7rem; border-radius: 0.5rem; border: 1px solid var(--border); width: 100%; box-sizing: border-box;">
+                            <option value="Semua">Semua Kategori</option>
+                            <option value="AUTENTIKASI">Autentikasi (Login/Logout)</option>
+                            <option value="SUPERVISI">Supervisi</option>
+                            <option value="AKUN">Manajemen Akun</option>
+                            <option value="PENGATURAN">Pengaturan Data</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline" style="height: 42px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onclick="resetFilterLog()" title="Reset Filter"><i class="material-icons-round">filter_alt_off</i> Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Card with Pagination -->
+            <div class="card" style="padding: 0;">
+                <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main);">
+                        <i class="material-icons-round" style="color: var(--primary);">receipt_long</i>
+                        <span>Daftar Riwayat Log Trail</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn" style="background: var(--primary); color: white; padding: 0.4rem 0.75rem; font-size: 0.85rem; height: auto; display: flex; align-items: center; gap: 0.35rem;" onclick="downloadLogTrail()"><i class="material-icons-round" style="font-size: 1.1rem;">download</i> Unduh CSV</button>
+                        <button class="btn btn-outline" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; height: auto; display: flex; align-items: center; gap: 0.35rem; color: var(--danger); border-color: #fca5a5;" onclick="resetLogTrail()"><i class="material-icons-round" style="font-size: 1.1rem;">delete_sweep</i> Bersihkan Log</button>
+                        <div style="width: 1px; height: 20px; background: var(--border); margin: 0 0.25rem;"></div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Tampilkan:</span>
+                        <select id="select-log-per-page" onchange="changeLogItemsPerPage(this.value)" style="padding: 0.35rem 0.5rem; border-radius: 0.4rem; border: 1px solid var(--border); font-size: 0.85rem;">
+                            <option value="10" selected>10 baris</option>
+                            <option value="25">25 baris</option>
+                            <option value="50">50 baris</option>
+                            <option value="100">100 baris</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container" style="border: none; border-radius: 0;">
+                    <table id="table-logtrail">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">No</th>
+                                <th style="width: 180px;">Waktu & Tanggal</th>
+                                <th style="width: 220px;">Pengguna & Role</th>
+                                <th style="width: 180px;">Tindakan</th>
+                                <th>Keterangan Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-logtrail"></tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="pagination-container" id="log-pagination-controls">
+                    <span class="pagination-info" id="log-pagination-info">Menampilkan 0 - 0 dari 0 log</span>
+                    <div class="pagination-controls">
+                        <button class="btn btn-outline btn-icon" id="btn-prev-log-page" onclick="changeLogPage(-1)" title="Halaman Sebelumnya"><i class="material-icons-round">chevron_left</i></button>
+                        <button class="btn btn-outline btn-icon" id="btn-next-log-page" onclick="changeLogPage(1)" title="Halaman Selanjutnya"><i class="material-icons-round">chevron_right</i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 </div>
 
 <script type="module">
     window.setText = function(id, text) { const el = document.getElementById(id); if (el) { el.innerText = text; } else { console.warn("Missing element for setText:", id); } };
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, doc, deleteDoc, setDoc, getDoc, updateDoc, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     // MODE PREVIEW - Ganti ke 'false' jika sudah setting config & rules Firebase sungguhan!
@@ -843,8 +1010,47 @@
     let editModeId = null; 
     let itemsPerPage = 10;
     let currentPage = 1;
+    let globalLogs = [];
+    let filteredLogs = [];
+    let logItemsPerPage = 10;
+    let logCurrentPage = 1;
     let dashboardChartInstance = null;
 
+    // Log Activity Function
+    window.logActivity = async (kategori, tindakan, detail = '') => {
+        if (!currentUser) return;
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+
+        const logItem = {
+            timestamp: Date.now(),
+            tanggalWaktu: `${dateStr}, ${timeStr}`,
+            userId: currentUser.id || currentUser.username || 'unknown',
+            userName: currentUser.namaSupervisor || currentUser.kepsek || currentUser.username || 'Pengguna',
+            userRole: currentUser.role || 'user',
+            satuanPendidikan: currentUser.satuanPendidikan || (currentUser.role === 'admin' ? 'Dinas Pusat' : 'Satuan'),
+            kategori: kategori,
+            tindakan: tindakan,
+            detail: detail
+        };
+
+        if (!window.mockLogs) window.mockLogs = [];
+        logItem.id = 'log-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        window.mockLogs.unshift(logItem);
+
+        try {
+            localStorage.setItem('supervisi_mock_logs', JSON.stringify(window.mockLogs.slice(0, 100)));
+        } catch(e) {}
+
+        if (!IS_PREVIEW && db) {
+            try {
+                await addDoc(collection(db, "logs"), logItem);
+            } catch(e) {
+                console.warn("Mencatat log ke Firestore dilewati/gagal:", e.message || "error");
+            }
+        }
+    };
     // Helper Functions
     window.toggleSidebarDesktop = () => { document.getElementById('sidebar').classList.toggle('collapsed-desktop'); };
     window.togglePassword = (inputId, btn) => { const input = document.getElementById(inputId); const icon = btn.querySelector('i'); if (input.type === 'password') { input.type = 'text'; if(icon) icon.innerText = 'visibility_off'; } else { input.type = 'password'; if(icon) icon.innerText = 'visibility'; } };
@@ -871,11 +1077,37 @@
     window.initApp = async function initApp() {
         if (IS_PREVIEW) {
             window.mockUsers = [
-                { id: "sekolah1", username: "sekolah1", password: "123", satuanPendidikan: "SMAN 1 Malang", namaSupervisor: "Budi Santoso", kepsek: "Budi Santoso", kepalaTU: "Siti Aminah", role: "user" },
+                { id: "sekolah1", username: "sekolah1", password: "123", satuanPendidikan: "SMA Islam Sabilillah", namaSupervisor: "Drs. H. Ali", kepsek: "Drs. H. Ali", kepalaTU: "Siti Aminah", role: "user" },
                 { id: "lpis1", username: "lpis", password: "123", satuanPendidikan: "LPI Sabilillah", namaSupervisor: "Drs. Ahmad (Supervisor LPIS)", kepsek: "Drs. Ahmad (Supervisor LPIS)", kepalaTU: "LPI Pusat", role: "supervisor_lpis" }
             ];
             window.mockSupervisi = [];
-            window.mockSettings = { tahunAjaran: ["2023/2024", "2024/2025"], sekolahList: [{ nama: "SMAN 1 Malang", supervisor: "Budi Santoso" }, { nama: "SMKN 1 Malang", supervisor: "Siti Aminah" }] };
+            window.mockSettings = { 
+                tahunAjaran: ["2023/2024", "2024/2025", "2025/2026"], 
+                sekolahList: [
+                    { nama: "TK Islam Sabilillah", supervisor: "Ahmad S." },
+                    { nama: "SD Islam Sabilillah", supervisor: "Siti A." },
+                    { nama: "SMP Islam Sabilillah", supervisor: "Budi S." },
+                    { nama: "SMA Islam Sabilillah", supervisor: "Drs. H. Ali" },
+                    { nama: "SMA Islam Sabilillah Boarding School", supervisor: "Ustadz H. M." }
+                ] 
+            };
+            window.mockLogs = [
+                { id: "log-1", timestamp: Date.now() - 1000*60*5, tanggalWaktu: "08 Aug 2026, 11:30:00 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "AUTENTIKASI", tindakan: "Login Admin", detail: "Administrator berhasil masuk ke sistem" },
+                { id: "log-2", timestamp: Date.now() - 1000*60*25, tanggalWaktu: "08 Aug 2026, 11:10:00 WIB", userId: "lpis1", userName: "Drs. Ahmad", userRole: "supervisor_lpis", satuanPendidikan: "LPI Sabilillah", kategori: "SUPERVISI", tindakan: "Tambah Laporan Supervisi", detail: "Menambahkan laporan supervisi SMAN 1 Malang" },
+                { id: "log-3", timestamp: Date.now() - 1000*60*80, tanggalWaktu: "08 Aug 2026, 10:15:22 WIB", userId: "sekolah1", userName: "Budi Santoso", userRole: "user", satuanPendidikan: "SMAN 1 Malang", kategori: "SUPERVISI", tindakan: "Edit Laporan Supervisi", detail: "Memperbarui catatan temuan kebersihan sarpras" },
+                { id: "log-4", timestamp: Date.now() - 1000*60*180, tanggalWaktu: "08 Aug 2026, 08:30:00 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "AKUN", tindakan: "Tambah Akun User", detail: "Membuat akun baru: user_sd (SD Sabilillah)" },
+                { id: "log-5", timestamp: Date.now() - 1000*60*320, tanggalWaktu: "08 Aug 2026, 06:10:15 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "PENGATURAN", tindakan: "Tambah Tahun Ajaran", detail: "Menambahkan tahun ajaran 2025/2026" },
+                { id: "log-6", timestamp: Date.now() - 1000*60*1440, tanggalWaktu: "07 Aug 2026, 11:30:10 WIB", userId: "sekolah1", userName: "Budi Santoso", userRole: "user", satuanPendidikan: "SMAN 1 Malang", kategori: "AUTENTIKASI", tindakan: "Login User", detail: "User sekolah1 (SMAN 1 Malang) berhasil masuk" },
+                { id: "log-7", timestamp: Date.now() - 1000*60*1800, tanggalWaktu: "07 Aug 2026, 05:20:00 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "AKUN", tindakan: "Edit Akun User", detail: "Memperbarui data supervisor untuk SMAN 1 Malang" },
+                { id: "log-8", timestamp: Date.now() - 1000*60*2800, tanggalWaktu: "06 Aug 2026, 13:12:30 WIB", userId: "lpis1", userName: "Drs. Ahmad", userRole: "supervisor_lpis", satuanPendidikan: "LPI Sabilillah", kategori: "SUPERVISI", tindakan: "Hapus Laporan Supervisi", detail: "Menghapus draf laporan supervisi duplikat" },
+                { id: "log-9", timestamp: Date.now() - 1000*60*3500, tanggalWaktu: "06 Aug 2026, 01:30:15 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "PENGATURAN", tindakan: "Tambah Sekolah", detail: "Menambahkan sekolah SMP Sabilillah Malang" },
+                { id: "log-10", timestamp: Date.now() - 1000*60*4300, tanggalWaktu: "05 Aug 2026, 12:10:00 WIB", userId: "sekolah1", userName: "Budi Santoso", userRole: "user", satuanPendidikan: "SMAN 1 Malang", kategori: "AUTENTIKASI", tindakan: "Logout", detail: "User Budi Santoso keluar dari aplikasi" },
+                { id: "log-11", timestamp: Date.now() - 1000*60*5200, tanggalWaktu: "04 Aug 2026, 21:15:10 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "AUTENTIKASI", tindakan: "Login Admin", detail: "Administrator berhasil masuk ke sistem" },
+                { id: "log-12", timestamp: Date.now() - 1000*60*6100, tanggalWaktu: "04 Aug 2026, 06:20:05 WIB", userId: "lpis1", userName: "Drs. Ahmad", userRole: "supervisor_lpis", satuanPendidikan: "LPI Sabilillah", kategori: "SUPERVISI", tindakan: "Tambah Laporan Supervisi", detail: "Menambahkan laporan supervisi kebersihan sarpras" },
+                { id: "log-13", timestamp: Date.now() - 1000*60*7200, tanggalWaktu: "03 Aug 2026, 12:00:00 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "PENGATURAN", tindakan: "Edit Tahun Ajaran", detail: "Memperbarui daftar tahun ajaran master" },
+                { id: "log-14", timestamp: Date.now() - 1000*60*8500, tanggalWaktu: "02 Aug 2026, 14:25:00 WIB", userId: "sekolah1", userName: "Budi Santoso", userRole: "user", satuanPendidikan: "SMAN 1 Malang", kategori: "SUPERVISI", tindakan: "Tambah Laporan Supervisi", detail: "Menambahkan temuan perawatan toilet dan taman" },
+                { id: "log-15", timestamp: Date.now() - 1000*60*9900, tanggalWaktu: "01 Aug 2026, 09:10:00 WIB", userId: "admin", userName: "Administrator", userRole: "admin", satuanPendidikan: "Pusat", kategori: "AKUN", tindakan: "Tambah Akun User", detail: "Membuat akun baru untuk SMKN 1 Malang" }
+            ];
             const saved = localStorage.getItem('supervisi_session');
             if (saved) { currentUser = JSON.parse(saved); proceedToApp(); }
             return;
@@ -885,10 +1117,13 @@
             const saved = localStorage.getItem('supervisi_session');
             if (saved) {
                 currentUser = JSON.parse(saved);
+                if (currentUser.role !== 'admin') {
+                    try { await signInAnonymously(auth); } catch(err) { console.warn("Anon auth failed", err.message || "error"); }
+                }
                 proceedToApp();
             }
-            onAuthStateChanged(auth, (user) => { if (user && (!currentUser || currentUser.role !== 'admin')) { currentUser = { id: user.email, role: 'admin', satuanPendidikan: 'Dinas Pusat', namaSupervisor: 'Administrator' }; proceedToApp(); } });
-        } catch (error) { console.error("Firebase Init Error:", error); showToast("Gagal terhubung ke Firebase.", "error"); }
+            onAuthStateChanged(auth, async (user) => { if (user && !currentUser) { currentUser = { id: user.email, role: 'admin', satuanPendidikan: 'Dinas Pusat', namaSupervisor: 'Administrator' }; localStorage.setItem('supervisi_session', JSON.stringify(currentUser)); proceedToApp(); } });
+        } catch (error) { console.error("Firebase Init Error:", error.message || "error"); showToast("Gagal terhubung ke Firebase.", "error"); }
     }
 
     // Login Logic
@@ -900,28 +1135,64 @@
     };
 
     window.handleUserLogin = async () => {
-        const user = document.getElementById('login-user-id').value; const pass = document.getElementById('login-user-pass').value;
+        const user = document.getElementById('login-user-id').value; 
+        const pass = document.getElementById('login-user-pass').value;
         if(!user || !pass) return showToast("Isi ID dan Password!", "error");
         if (IS_PREVIEW) {
             const found = window.mockUsers.find(u => u.username === user && u.password === pass);
-            if(found) { currentUser = found; proceedToApp(); } else showToast("Akun salah (Preview)", "error");
+            if(found) { 
+                currentUser = found; 
+                localStorage.setItem('supervisi_session', JSON.stringify(currentUser));
+                proceedToApp(); 
+                window.logActivity("AUTENTIKASI", "Login User", `User ${found.username} (${found.satuanPendidikan}) berhasil masuk`);
+            } else showToast("Akun salah (Preview)", "error");
             return;
         }
         try {
+            if (auth && auth.currentUser) { try { await signOut(auth); } catch(e){} }
             const q = query(collection(db, "users"), where("username", "==", user), where("password", "==", pass));
             const snap = await getDocs(q);
-            if (!snap.empty) { currentUser = { id: snap.docs[0].id, ...snap.docs[0].data() }; showToast("Login Berhasil!", "success"); proceedToApp(); } else showToast("Akun tidak ada!", "error");
-        } catch (e) { showToast("Gagal database. Cek Rules!", "error"); }
+            if (!snap.empty) { 
+                currentUser = { id: snap.docs[0].id, ...snap.docs[0].data() }; 
+                localStorage.setItem('supervisi_session', JSON.stringify(currentUser));
+                showToast("Login Berhasil!", "success"); 
+                try { await signInAnonymously(auth); } catch(err) { console.warn("Anon auth failed", err.message || "error"); }
+                proceedToApp(); 
+                window.logActivity("AUTENTIKASI", "Login User", `User ${currentUser.username || currentUser.id} (${currentUser.satuanPendidikan || 'Satuan'}) berhasil masuk`);
+            } else showToast("Akun tidak ada atau password salah!", "error");
+        } catch (e) { console.error("Login user error:", e.message || "error"); showToast("Gagal database. Cek Rules!", "error"); }
     };
 
     window.handleAdminLogin = async () => {
-        const email = document.getElementById('login-admin-email').value; const pass = document.getElementById('login-admin-pass').value;
+        const email = document.getElementById('login-admin-email').value; 
+        const pass = document.getElementById('login-admin-pass').value;
         if(!email || !pass) return showToast("Isi Email dan Password!", "error");
-        if (IS_PREVIEW) { currentUser = { id: 'admin', role: 'admin', satuanPendidikan: 'Pusat', namaSupervisor: 'Administrator' }; proceedToApp(); return; }
-        try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { showToast("Login gagal! Pastikan admin sudah terdaftar di Firebase Auth.", "error"); }
+        if (IS_PREVIEW) { 
+            currentUser = { id: 'admin', role: 'admin', satuanPendidikan: 'Dinas Pusat', namaSupervisor: 'Administrator' }; 
+            localStorage.setItem('supervisi_session', JSON.stringify(currentUser));
+            proceedToApp(); 
+            window.logActivity("AUTENTIKASI", "Login Admin", `Administrator berhasil masuk ke sistem`);
+            return; 
+        }
+        try { 
+            await signInWithEmailAndPassword(auth, email, pass); 
+            currentUser = { id: email, role: 'admin', satuanPendidikan: 'Dinas Pusat', namaSupervisor: 'Administrator' };
+            localStorage.setItem('supervisi_session', JSON.stringify(currentUser));
+            showToast("Login Admin Berhasil!", "success");
+            proceedToApp();
+            window.logActivity("AUTENTIKASI", "Login Admin", `Administrator (${email}) berhasil masuk`);
+        } catch (e) { console.error("Admin login error:", e.message || "error"); showToast("Login gagal! Pastikan admin sudah terdaftar di Firebase Auth.", "error"); }
     };
-
-    window.handleLogout = async () => { if(!IS_PREVIEW && currentUser?.role === 'admin') await signOut(auth); currentUser = null; localStorage.removeItem('supervisi_session'); document.getElementById('login-view').classList.remove('hidden'); document.getElementById('sidebar').classList.add('hidden'); document.getElementById('main-content').classList.add('hidden'); };
+    window.handleLogout = async () => { 
+        if (currentUser) {
+            await window.logActivity("AUTENTIKASI", "Logout", `User ${currentUser.namaSupervisor || currentUser.id} keluar dari aplikasi`);
+        }
+        if(!IS_PREVIEW) await signOut(auth); 
+        currentUser = null; localStorage.removeItem('supervisi_session'); 
+        document.getElementById('login-view').classList.remove('hidden'); 
+        document.getElementById('sidebar').classList.add('hidden'); 
+        document.getElementById('main-content').classList.add('hidden'); 
+    };
 
     window.proceedToApp = function proceedToApp() {
         localStorage.setItem('supervisi_session', JSON.stringify(currentUser));
@@ -941,6 +1212,13 @@
         } else { 
             document.getElementById('nav-pengaturan').classList.add('hidden'); 
             document.getElementById('nav-akun').classList.add('hidden'); 
+        }
+
+        // Log Trail hanya untuk Admin dan Supervisor LPIS
+        if(currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') {
+            document.getElementById('nav-logtrail').classList.remove('hidden');
+        } else {
+            document.getElementById('nav-logtrail').classList.add('hidden');
         }
 
         // Filter Satuan & Supervisor dilihat oleh Admin dan Supervisor LPIS
@@ -965,12 +1243,245 @@
     }
 
     // Navigation & Forms
+    window.goToRekapSatuan = (sat) => {
+        window.__pendingRekapFilterSatuan = sat;
+        window.navigate('rekap');
+    };
+
     window.navigate = (target) => {
+        if (target === 'logtrail' && currentUser && currentUser.role !== 'admin' && currentUser.role !== 'supervisor_lpis') {
+            target = 'dashboard';
+        }
         document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
         const navItem = document.querySelector(`.nav-item[data-target="${target}"]`); if(navItem) navItem.classList.add('active');
         document.querySelectorAll('.page-view').forEach(e => e.classList.remove('active'));
         document.getElementById(`view-${target}`).classList.add('active');
         if(target === 'rekap') { loadRekapitulasi(); toggleInputSection(false); }
+        if(target === 'logtrail') { loadLogTrail(); }
+    };
+
+    // Log Trail & Pagination Logic
+    window.loadLogTrail = async function loadLogTrail() {
+        const tbody = document.getElementById('tbody-logtrail');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem;"><i class="material-icons-round" style="animation: spin 1s linear infinite;">sync</i> Memuat riwayat log...</td></tr>';
+        
+        try {
+            globalLogs = [];
+            const savedLocal = localStorage.getItem('supervisi_mock_logs');
+            let localLogs = [];
+            if (savedLocal) {
+                try { localLogs = JSON.parse(savedLocal); } catch(e){}
+            }
+            if (IS_PREVIEW) {
+                globalLogs = (window.mockLogs && window.mockLogs.length > 0) ? window.mockLogs : localLogs;
+            } else {
+                try {
+                    const snap = await getDocs(collection(db, "logs"));
+                    snap.forEach(doc => globalLogs.push({ id: doc.id, ...doc.data() }));
+                } catch(fsErr) {
+                    console.warn("Firestore log fetch error:", fsErr.message || "error");
+                    globalLogs = (window.mockLogs && window.mockLogs.length > 0) ? window.mockLogs : localLogs;
+                }
+            }
+            if (globalLogs.length === 0) {
+                globalLogs = localLogs.length > 0 ? localLogs : (window.mockLogs || []);
+            }
+            globalLogs.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            filterLogTrail();
+        } catch(e) {
+            console.error("Error load log trail:", e.message || "error");
+            globalLogs = window.mockLogs || [];
+            filterLogTrail();
+        }
+    };
+    window.filterLogTrail = function filterLogTrail() {
+        const keyword = (document.getElementById('input-log-search')?.value || '').toLowerCase().trim();
+        const roleFilter = document.getElementById('filter-log-role')?.value || 'Semua';
+        const katFilter = document.getElementById('filter-log-kat')?.value || 'Semua';
+
+        filteredLogs = globalLogs.filter(item => {
+            const matchKeyword = !keyword || 
+                (item.userName && item.userName.toLowerCase().includes(keyword)) ||
+                (item.tindakan && item.tindakan.toLowerCase().includes(keyword)) ||
+                (item.detail && item.detail.toLowerCase().includes(keyword)) ||
+                (item.satuanPendidikan && item.satuanPendidikan.toLowerCase().includes(keyword));
+
+            const matchRole = roleFilter === 'Semua' || item.userRole === roleFilter;
+            const matchKat = katFilter === 'Semua' || item.kategori === katFilter;
+
+            return matchKeyword && matchRole && matchKat;
+        });
+
+        logCurrentPage = 1;
+        renderLogTrailTable();
+    };
+
+    window.changeLogPage = function changeLogPage(step) {
+        const totalPages = Math.ceil(filteredLogs.length / logItemsPerPage) || 1;
+        logCurrentPage += step;
+        if (logCurrentPage < 1) logCurrentPage = 1;
+        if (logCurrentPage > totalPages) logCurrentPage = totalPages;
+        renderLogTrailTable();
+    };
+
+    window.changeLogItemsPerPage = function changeLogItemsPerPage(val) {
+        logItemsPerPage = parseInt(val) || 10;
+        logCurrentPage = 1;
+        renderLogTrailTable();
+    };
+
+    window.resetFilterLog = function resetFilterLog() {
+        if (document.getElementById('input-log-search')) document.getElementById('input-log-search').value = '';
+        if (document.getElementById('filter-log-role')) document.getElementById('filter-log-role').value = 'Semua';
+        if (document.getElementById('filter-log-kat')) document.getElementById('filter-log-kat').value = 'Semua';
+        filterLogTrail();
+    };
+
+    window.downloadLogTrail = function downloadLogTrail() {
+        if (!filteredLogs || filteredLogs.length === 0) {
+            showToast("Tidak ada data log untuk diunduh", "error");
+            return;
+        }
+
+        const headers = ["Waktu", "Tanggal", "Kategori", "Tindakan", "User", "Role", "Satuan Pendidikan", "Detail"];
+        const rows = [headers.join(",")];
+        
+        filteredLogs.forEach(log => {
+            const dateObj = new Date(log.timestamp);
+            const wkt = ("0" + dateObj.getHours()).slice(-2) + ":" + ("0" + dateObj.getMinutes()).slice(-2);
+            const tgl = ("0" + dateObj.getDate()).slice(-2) + "/" + ("0" + (dateObj.getMonth() + 1)).slice(-2) + "/" + dateObj.getFullYear();
+            
+            const escapeCSV = (str) => `"${(str || '').replace(/"/g, '""')}"`;
+
+            rows.push([
+                escapeCSV(wkt),
+                escapeCSV(tgl),
+                escapeCSV(log.kategori),
+                escapeCSV(log.tindakan),
+                escapeCSV(log.userName || log.userId),
+                escapeCSV(log.userRole),
+                escapeCSV(log.satuanPendidikan),
+                escapeCSV(log.detail)
+            ].join(","));
+        });
+
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Log_Trail_Supervisi_${new Date().getTime()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    window.resetLogTrail = function resetLogTrail() {
+        if (currentUser?.role !== 'admin') {
+            showToast("Hanya admin yang bisa membersihkan log", "error");
+            return;
+        }
+        window.showConfirmModal("Bersihkan Log Trail", "Anda yakin ingin menghapus SEMUA data log trail? Tindakan ini tidak bisa dibatalkan.", async () => {
+            try {
+                if (IS_PREVIEW) {
+                    window.mockLogs = [];
+                } else {
+                    const snap = await getDocs(collection(db, "logs"));
+                    const promises = [];
+                    snap.forEach(docSnap => {
+                        promises.push(deleteDoc(doc(db, "logs", docSnap.id)));
+                    });
+                    await Promise.all(promises);
+                }
+                showToast("Semua log berhasil dibersihkan", "success");
+                window.loadLogTrail();
+            } catch(e) {
+                console.error("Gagal reset log:", e.message || "error");
+                showToast("Gagal membersihkan log trail", "error");
+            }
+        });
+    };
+
+    window.renderLogTrailTable = function renderLogTrailTable() {
+        const tbody = document.getElementById('tbody-logtrail');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const totalItems = filteredLogs.length;
+        const totalPages = Math.ceil(totalItems / logItemsPerPage) || 1;
+
+        const btnPrev = document.getElementById('btn-prev-log-page');
+        const btnNext = document.getElementById('btn-next-log-page');
+        const infoText = document.getElementById('log-pagination-info');
+
+        if (totalItems === 0) {
+            if (infoText) infoText.innerText = 'Menampilkan 0 - 0 dari 0 log';
+            if (btnPrev) { btnPrev.disabled = true; btnPrev.style.opacity = '0.5'; }
+            if (btnNext) { btnNext.disabled = true; btnNext.style.opacity = '0.5'; }
+            tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="material-icons-round">history_toggle_off</i><p>Tidak ada riwayat aktivitas ditemukan.</p></div></td></tr>`;
+            return;
+        }
+
+        if (logCurrentPage > totalPages) logCurrentPage = totalPages;
+        const startIndex = (logCurrentPage - 1) * logItemsPerPage;
+        const endIndex = Math.min(startIndex + logItemsPerPage, totalItems);
+
+        if (infoText) infoText.innerText = `Menampilkan ${startIndex + 1} - ${endIndex} dari ${totalItems} log`;
+        if (btnPrev) { btnPrev.disabled = logCurrentPage === 1; btnPrev.style.opacity = logCurrentPage === 1 ? '0.5' : '1'; }
+        if (btnNext) { btnNext.disabled = logCurrentPage === totalPages; btnNext.style.opacity = logCurrentPage === totalPages ? '0.5' : '1'; }
+
+        const pagedData = filteredLogs.slice(startIndex, endIndex);
+
+        pagedData.forEach((item, i) => {
+            const rowNo = startIndex + i + 1;
+            
+            let badgeStyle = "background:#f1f5f9; color:#475569;";
+            if (item.kategori === "AUTENTIKASI") {
+                badgeStyle = "background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;";
+            } else if (item.kategori === "SUPERVISI") {
+                if (item.tindakan && item.tindakan.includes("Hapus")) badgeStyle = "background:#fef2f2; color:#dc2626; border:1px solid #fecaca;";
+                else if (item.tindakan && item.tindakan.includes("Edit")) badgeStyle = "background:#fffbeb; color:#d97706; border:1px solid #fde68a;";
+                else badgeStyle = "background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;";
+            } else if (item.kategori === "AKUN") {
+                badgeStyle = "background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff;";
+            } else if (item.kategori === "PENGATURAN") {
+                badgeStyle = "background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;";
+            }
+
+            let roleBadge = '<span style="font-size: 0.68rem; background: #64748b; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">SATUAN</span>';
+            if (item.userRole === 'admin') {
+                roleBadge = '<span style="font-size: 0.68rem; background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">ADMIN</span>';
+            } else if (item.userRole === 'supervisor_lpis') {
+                roleBadge = '<span style="font-size: 0.68rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">SUPERVISOR LPIS</span>';
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="text-align: center; font-weight: 600; color: #64748b;">${rowNo}</td>
+                    <td>
+                        <div style="font-weight: 600; font-size: 0.82rem; color: var(--text-main); font-family: monospace; white-space: nowrap;">
+                            <i class="material-icons-round" style="font-size: 0.9rem; vertical-align: middle; color: var(--primary);">schedule</i>
+                            ${item.tanggalWaktu || '-'}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);">${item.userName || 'User'}</div>
+                        <div style="margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+                            ${roleBadge}
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${item.satuanPendidikan || '-'}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; display: inline-block; ${badgeStyle}">
+                            ${item.tindakan || item.kategori}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.85rem; color: var(--text-main); line-height: 1.4;">${item.detail || '-'}</div>
+                    </td>
+                </tr>
+            `;
+        });
     };
 
     window.toggleInputSection = (forceOpen = null) => {
@@ -1014,6 +1525,11 @@
                 } 
             }
             showToast(editModeId ? "Laporan Diperbarui!" : "Laporan Disimpan!", "success"); 
+            if (editModeId) {
+                window.logActivity("SUPERVISI", "Edit Laporan Supervisi", `Memperbarui laporan supervisi ${data.satuanPendidikan} - ${data.bulan} ${data.tahunAjaran}`);
+            } else {
+                window.logActivity("SUPERVISI", "Tambah Laporan Supervisi", `Menambahkan laporan supervisi ${data.satuanPendidikan} - ${data.bulan} ${data.tahunAjaran}`);
+            }
             window.toggleInputSection(false); 
             
             // Re-render instead of refetching all data
@@ -1033,6 +1549,7 @@
             if(IS_PREVIEW) { globalSupervisiData = (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') ? window.mockSupervisi : window.mockSupervisi.filter(s => s.userId === currentUser.id); } 
             else { const qRef = (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') ? query(collection(db, "supervisi"), orderBy("timestamp", "desc"), limit(500)) : query(collection(db, "supervisi"), where("userId", "==", currentUser.id), limit(500)); const snap = await getDocs(qRef); snap.forEach(doc => globalSupervisiData.push({ id: doc.id, ...doc.data() })); }
             globalSupervisiData.sort((a,b) => b.timestamp - a.timestamp);
+            window.populateInputDropdowns();
             
             const selSpv = document.getElementById('filter-rekap-supervisor');
             if (selSpv) {
@@ -1074,6 +1591,36 @@
         window.applyFilterRekap();
     };
 
+    
+    window.updateSatuanFilterIndicator = function() {
+        const indContainer = document.getElementById('satuan-filter-indicator');
+        const indName = document.getElementById('satuan-filter-name');
+        if (!indContainer || !indName) return;
+
+        const selSatuan = document.getElementById('filter-rekap-satuan');
+        const filterSatuan = selSatuan ? selSatuan.value : 'Semua';
+
+        let activeSatuan = '';
+        if (filterSatuan && filterSatuan !== 'Semua') {
+            activeSatuan = filterSatuan;
+        } else if (currentUser && currentUser.role !== 'admin' && currentUser.role !== 'supervisor_lpis' && currentUser.satuanPendidikan) {
+            activeSatuan = currentUser.satuanPendidikan;
+        }
+
+        if (activeSatuan) {
+            indContainer.style.display = 'flex';
+            indName.innerText = activeSatuan;
+        } else {
+            indContainer.style.display = 'none';
+        }
+    };
+
+    window.resetSatuanFilter = function() {
+        const selSatuan = document.getElementById('filter-rekap-satuan');
+        if (selSatuan) selSatuan.value = 'Semua';
+        window.applyFilterRekap();
+    };
+
     window.applyFilterRekap = () => {
         const filterBulan = document.getElementById('filter-rekap-bulan').value;
         const filterTahun = document.getElementById('filter-rekap-tahun').value;
@@ -1099,6 +1646,7 @@
         });
 
         currentPage = 1; // Reset ke halaman 1 setiap kali filter diubah
+        updateSatuanFilterIndicator();
         renderRekapTable();
     };
 
@@ -1108,12 +1656,17 @@
         currentPage += step;
         if (currentPage < 1) currentPage = 1;
         if (currentPage > totalPages) currentPage = totalPages;
+        updateSatuanFilterIndicator();
         renderRekapTable();
     };
 
     window.renderRekapTable = function renderRekapTable() {
+        if (window.updateSatuanFilterIndicator) window.updateSatuanFilterIndicator();
         const tbody = document.getElementById('tbody-rekap');
         tbody.innerHTML = '';
+
+        const filterSatuan = document.getElementById('filter-rekap-satuan') ? document.getElementById('filter-rekap-satuan').value : 'Semua';
+        const isSatuanFiltered = filterSatuan !== 'Semua' || (currentUser && currentUser.role !== 'admin' && currentUser.role !== 'supervisor_lpis');
 
         const totalItems = filteredSupervisiData.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
@@ -1127,7 +1680,8 @@
             if(infoText) infoText.innerText = `Menampilkan 0 - 0 dari 0 data`;
             btnPrev.disabled = true; btnPrev.style.opacity = '0.5';
             btnNext.disabled = true; btnNext.style.opacity = '0.5';
-            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="material-icons-round">folder_open</i><p>Tidak ada data laporan ditemukan pada filter ini.</p></div></td></tr>`; return;
+            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="material-icons-round">folder_open</i><p>Tidak ada data laporan ditemukan pada filter ini.</p></div></td></tr>`; 
+            return;
         }
 
         // Hitung batasan potong data (slice)
@@ -1142,10 +1696,23 @@
 
         // Ambil hanya data untuk halaman ini
         const pagedData = filteredSupervisiData.slice(startIndex, endIndex);
-
         const hariArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-        pagedData.forEach((s) => {
+        let dateSpans = [];
+        if (isSatuanFiltered) {
+            let i = 0;
+            while (i < pagedData.length) {
+                let count = 1;
+                while (i + count < pagedData.length && pagedData[i].tanggal === pagedData[i + count].tanggal) {
+                    count++;
+                }
+                dateSpans.push(count);
+                for (let j = 1; j < count; j++) dateSpans.push(0);
+                i += count;
+            }
+        }
+
+        pagedData.forEach((s, idx) => {
             const originalIdx = globalSupervisiData.findIndex(g => g.id === s.id);
             
             // Konversi Tanggal ke Format: Hari, DD/MM/YY
@@ -1162,19 +1729,32 @@
                 }
             } catch(e) {}
             
+            let dateTd = '';
+            let satuanTd = '';
+            
+            if (isSatuanFiltered) {
+                if (dateSpans[idx] > 0) {
+                    dateTd = `<td rowspan="${dateSpans[idx]}" style="white-space: nowrap; vertical-align: top; border-bottom: 1px solid var(--border-color); background: #ffffff;">${formattedDate}</td>`;
+                    satuanTd = `<td rowspan="${dateSpans[idx]}" style="vertical-align: top; border-bottom: 1px solid var(--border-color); background: #ffffff;"><div class="font-semibold text-main" style="font-size: 0.95rem;">${s.satuanPendidikan}</div></td>`;
+                }
+            } else {
+                dateTd = `<td style="white-space: nowrap; vertical-align: top;">${formattedDate}</td>`;
+                satuanTd = `<td style="vertical-align: top;"><div class="font-semibold text-main" style="font-size: 0.95rem;">${s.satuanPendidikan}</div></td>`;
+            }
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="white-space: nowrap;">${formattedDate}</td>
-                <td><div class="font-semibold text-main" style="font-size: 0.95rem;">${s.satuanPendidikan}</div></td>
-                <td>
+                ${dateTd}
+                ${satuanTd}
+                <td style="vertical-align: top;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="badge-spv">${s.namaSupervisor.charAt(0).toUpperCase()}</div>
                         <span style="font-size: 0.85rem; font-weight: 600; color: #334155;">${s.namaSupervisor}</span>
                     </div>
                 </td>
-                <td><div class="badge-waktu"><i class="material-icons-round" style="font-size: 1rem;">schedule</i> ${s.waktu} WIB</div></td>
-                <td><div class="badge-temuan">${s.detailPertemuan.length} Temuan</div></td>
-                <td>
+                <td style="vertical-align: top;"><div class="badge-waktu"><i class="material-icons-round" style="font-size: 1rem;">schedule</i> ${s.waktu} WIB</div></td>
+                <td style="vertical-align: top;"><div class="badge-temuan">${s.detailPertemuan.length} Temuan</div></td>
+                <td style="vertical-align: top;">
                     <div class="action-group">
                         <button class="btn-action view" title="Lihat Detail" onclick="lihatDetail(${originalIdx})">
                             <i class="material-icons-round" style="font-size:1.2rem;">visibility</i>
@@ -1192,7 +1772,7 @@
         });
     }
 
-    window.hapusSupervisi = (id) => window.showConfirmModal("Hapus Laporan", "Anda yakin ingin menghapus data ini?", async () => { try { if(IS_PREVIEW) window.mockSupervisi = window.mockSupervisi.filter(s => s.id !== id); else await deleteDoc(doc(db, "supervisi", id)); showToast("Dihapus!", "success"); loadRekapitulasi(); loadDashboardData(); } catch(e) { showToast("Gagal menghapus", "error"); } });
+    window.hapusSupervisi = (id) => window.showConfirmModal("Hapus Laporan", "Anda yakin ingin menghapus data ini?", async () => { try { if(IS_PREVIEW) window.mockSupervisi = window.mockSupervisi.filter(s => s.id !== id); else await deleteDoc(doc(db, "supervisi", id)); showToast("Dihapus!", "success"); loadRekapitulasi(); loadDashboardData(); window.logActivity("SUPERVISI", "Hapus Laporan Supervisi", `Menghapus laporan supervisi ID: ${id}`); } catch(e) { showToast("Gagal menghapus", "error"); } });
 
     window.editSupervisi = (originalIdx) => {
         const data = globalSupervisiData[originalIdx]; if(!data) return; editModeId = data.id; window.toggleInputSection(true);
@@ -1213,13 +1793,101 @@
         container.innerHTML = html; document.getElementById('detail-temuan-area').classList.remove('hidden'); document.getElementById('detail-temuan-area').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
+    window.normalizeSatuanName = function(name) {
+        if (!name) return '';
+        return name.toLowerCase().replace(/\bmalang\b/gi, '').replace(/\s+/g, ' ').trim();
+    };
+
+    window.isSameSatuan = function(name1, name2) {
+        if (name1 === name2) return true;
+        if (!name1 || !name2) return false;
+        return window.normalizeSatuanName(name1) === window.normalizeSatuanName(name2);
+    };
+
+    window.getDeduplicatedSatuanList = function(rawList, dataArray) {
+        if (!rawList || !Array.isArray(rawList)) return [];
+        const groups = new Map();
+        rawList.forEach(sat => {
+            if (!sat) return;
+            const norm = window.normalizeSatuanName(sat);
+            if (!groups.has(norm)) {
+                groups.set(norm, []);
+            }
+            if (!groups.get(norm).includes(sat)) {
+                groups.get(norm).push(sat);
+            }
+        });
+
+        const result = [];
+        groups.forEach((variants) => {
+            if (variants.length === 1) {
+                result.push(variants[0]);
+            } else {
+                let bestVariant = null;
+                let maxReports = -1;
+                variants.forEach(varName => {
+                    const count = (dataArray || []).filter(d => (d.satuanPendidikan === varName) && d.createdByRole !== 'supervisor_lpis').length;
+                    if (count > maxReports) {
+                        maxReports = count;
+                        bestVariant = varName;
+                    }
+                });
+                if (maxReports <= 0) {
+                    const cleanVariant = variants.find(v => !/\bmalang\b/i.test(v)) || variants[0];
+                    result.push(cleanVariant);
+                } else {
+                    result.push(bestVariant);
+                }
+            }
+        });
+        return result;
+    };
+
+    window.getThemeForSatuan = (satName) => {
+        const name = (satName || "").toLowerCase();
+        if (name.includes('tk') || name.includes('taman kanak')) return { border: '#db2777', bg: 'linear-gradient(145deg, #ffffff 0%, #fdf2f8 100%)', iconBg: 'rgba(219,39,119,0.1)' };
+        if (name.includes('sd') || name.includes('sekolah dasar')) return { border: '#ea580c', bg: 'linear-gradient(145deg, #ffffff 0%, #fff7ed 100%)', iconBg: 'rgba(234,88,12,0.1)' };
+        if (name.includes('smp')) return { border: '#0284c7', bg: 'linear-gradient(145deg, #ffffff 0%, #f0f9ff 100%)', iconBg: 'rgba(2,132,199,0.1)' };
+        if ((name.includes('sma') || name.includes('smk')) && !name.includes('boarding')) return { border: '#059669', bg: 'linear-gradient(145deg, #ffffff 0%, #ecfdf5 100%)', iconBg: 'rgba(5,150,105,0.1)' };
+        if (name.includes('boarding') || name.includes('mbs')) return { border: '#8b5cf6', bg: 'linear-gradient(145deg, #ffffff 0%, #f5f3ff 100%)', iconBg: 'rgba(139,92,246,0.1)' };
+        const fallbacks = [
+            { border: '#dc2626', bg: 'linear-gradient(145deg, #ffffff 0%, #fef2f2 100%)', iconBg: 'rgba(220,38,38,0.1)' },   // Red
+            { border: '#0d9488', bg: 'linear-gradient(145deg, #ffffff 0%, #f0fdfa 100%)', iconBg: 'rgba(13,148,136,0.1)' },   // Teal
+            { border: '#d97706', bg: 'linear-gradient(145deg, #ffffff 0%, #fffbeb 100%)', iconBg: 'rgba(217,119,6,0.1)' },   // Amber
+            { border: '#4f46e5', bg: 'linear-gradient(145deg, #ffffff 0%, #eef2ff 100%)', iconBg: 'rgba(79,70,229,0.1)' },   // Indigo
+            { border: '#65a30d', bg: 'linear-gradient(145deg, #ffffff 0%, #f7fee7 100%)', iconBg: 'rgba(101,163,13,0.1)' },  // Lime
+            { border: '#0891b2', bg: 'linear-gradient(145deg, #ffffff 0%, #ecfeff 100%)', iconBg: 'rgba(8,145,178,0.1)' },   // Cyan
+            { border: '#c026d3', bg: 'linear-gradient(145deg, #ffffff 0%, #fdf4ff 100%)', iconBg: 'rgba(192,38,211,0.1)' },  // Fuchsia
+            { border: '#be123c', bg: 'linear-gradient(145deg, #ffffff 0%, #fff1f2 100%)', iconBg: 'rgba(190,18,60,0.1)' },   // Rose
+            { border: '#a21caf', bg: 'linear-gradient(145deg, #ffffff 0%, #fdf4ff 100%)', iconBg: 'rgba(162,28,175,0.1)' },  // Fuchsia Dark
+            { border: '#1d4ed8', bg: 'linear-gradient(145deg, #ffffff 0%, #eff6ff 100%)', iconBg: 'rgba(29,78,216,0.1)' },   // Blue Dark
+        ];
+        let hash = 0;
+        for (let i = 0; i < satName.length; i++) hash = satName.charCodeAt(i) + ((hash << 5) - hash);
+        return fallbacks[Math.abs(hash) % fallbacks.length];
+    };
+
+    window.isBulanInitialized = false;
     window.updateDashboardChart = function() {
         setTimeout(() => {
             const ctx = document.getElementById('chart-temuan'); if(!ctx) return;
-            const filterSatuan = document.getElementById('chart-filter-satuan')?.value || 'Semua';
-            const filterBulan = document.getElementById('chart-filter-bulan')?.value || 'Semua';
-            
+            const filterBulanEl = document.getElementById('chart-filter-bulan');
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; 
+            
+            if (!window.isBulanInitialized && filterBulanEl) {
+                const currentMonth = months[new Date().getMonth()];
+                filterBulanEl.value = currentMonth;
+                window.isBulanInitialized = true;
+            }
+
+            const filterSatuan = document.getElementById('chart-filter-satuan')?.value || 'Semua';
+            const filterBulan = filterBulanEl?.value || 'Semua';
+            
+            const titleEl = document.getElementById('title-tren-bulanan');
+            if (titleEl) {
+                titleEl.innerHTML = filterBulan === 'Semua' ? 'Tren Temuan Supervisi Bulanan' : `Tren Temuan Supervisi Bulanan <span style="font-size: 0.9em; opacity: 0.8;">- ${filterBulan}</span>`;
+            }
+
             const labels = filterBulan === 'Semua' ? months : [filterBulan];
             
             let targetSatuan = [];
@@ -1233,6 +1901,12 @@
                     if (targetSatuan.length === 0) {
                         targetSatuan = ['TK Islam Sabilillah', 'SD Islam Sabilillah', 'SMP Islam Sabilillah', 'SMA Islam Sabilillah', 'SMA Islam Sabilillah Boarding School'];
                     }
+                    globalSupervisiData.forEach(d => {
+                        if (d.satuanPendidikan && d.createdByRole !== 'supervisor_lpis') {
+                            targetSatuan.push(d.satuanPendidikan);
+                        }
+                    });
+                    targetSatuan = window.getDeduplicatedSatuanList(targetSatuan, globalSupervisiData);
                 }
             }
             
@@ -1247,7 +1921,7 @@
             const datasets = targetSatuan.map((sat, index) => {
                 const dataValues = labels.map(m => {
                     return globalSupervisiData.filter(s => {
-                        let matchSat = s.satuanPendidikan === sat;
+                        let matchSat = window.isSameSatuan(s.satuanPendidikan, sat);
                         if (sat === 'Temuan Supervisor LPI' || sat === 'Supervisor LPIS') {
                             matchSat = s.createdByRole === 'supervisor_lpis' || s.satuanPendidikan === 'LPI Sabilillah' || s.satuanPendidikan === 'Supervisor LPIS' || s.satuanPendidikan === 'Temuan Supervisor LPI';
                         }
@@ -1282,6 +1956,155 @@
         }, 50);
     }
 
+    window.dailyChartInstance = null;
+    
+    window.setQuickDateFilter = function(type) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        let start, end;
+        if (type === 'hari_ini') {
+            start = `${y}-${m}-${d}`;
+            end = `${y}-${m}-${d}`;
+        } else if (type === 'minggu_ini') {
+            const day = now.getDay();
+            const diff = now.getDate() - day + (day === 0 ? -6: 1); // adjust when day is sunday
+            const startWeek = new Date(now.setDate(diff));
+            start = startWeek.toISOString().split('T')[0];
+            
+            const endWeek = new Date(startWeek);
+            endWeek.setDate(endWeek.getDate() + 6);
+            end = endWeek.toISOString().split('T')[0];
+        }
+        
+        if(document.getElementById('chart-daily-start')) document.getElementById('chart-daily-start').value = start;
+        if(document.getElementById('chart-daily-end')) document.getElementById('chart-daily-end').value = end;
+        window.updateDailyChart();
+    };
+
+    window.updateDailyChart = function() {
+        setTimeout(() => {
+            const ctx = document.getElementById('chart-temuan-harian'); if(!ctx) return;
+            const filterSatuan = document.getElementById('chart-filter-satuan')?.value || 'Semua';
+            const startDash = document.getElementById('chart-daily-start')?.value;
+            const endDash = document.getElementById('chart-daily-end')?.value;
+            
+            // if no dates selected, default to current month
+            let start = startDash;
+            let end = endDash;
+            if (!start || !end) {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                if(!start) start = `${y}-${m}-01`;
+                // To get the last day of the month
+                const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+                if(!end) end = `${y}-${m}-${lastDay}`;
+                if(document.getElementById('chart-daily-start') && !startDash) document.getElementById('chart-daily-start').value = start;
+                if(document.getElementById('chart-daily-end') && !endDash) document.getElementById('chart-daily-end').value = end;
+            }
+            
+            // update title
+            const titleEl = document.getElementById('title-tren-harian');
+            if (titleEl) {
+                const ms = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const dStart = new Date(start);
+                const dEnd = new Date(end);
+                let titleExtra = "";
+                if (dStart.toString() !== 'Invalid Date' && dEnd.toString() !== 'Invalid Date') {
+                    if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
+                        titleExtra = ` - ${ms[dStart.getMonth()]} ${dStart.getFullYear()}`;
+                    } else {
+                        titleExtra = ` - ${dStart.getDate()} ${ms[dStart.getMonth()]} s.d ${dEnd.getDate()} ${ms[dEnd.getMonth()]}`;
+                    }
+                }
+                titleEl.innerHTML = `Tren Temuan dalam 1 Bulan <span style="font-size: 0.9em; opacity: 0.8;">${titleExtra}</span>`;
+            }
+
+            // generate array of dates between start and end
+            const labels = [];
+            let curr = new Date(start);
+            const endD = new Date(end);
+            while(curr <= endD) {
+                labels.push(curr.toISOString().split('T')[0]);
+                curr.setDate(curr.getDate() + 1);
+            }
+
+            let targetSatuan = [];
+            if (filterSatuan !== 'Semua') {
+                targetSatuan = [filterSatuan];
+            } else {
+                if (currentUser && currentUser.role !== 'admin') {
+                    targetSatuan = [currentUser.satuanPendidikan];
+                } else {
+                    targetSatuan = globalSettings && globalSettings.sekolahList ? globalSettings.sekolahList.map(sek => sek.nama) : [];
+                    if (targetSatuan.length === 0) {
+                        targetSatuan = ['TK Islam Sabilillah', 'SD Islam Sabilillah', 'SMP Islam Sabilillah', 'SMA Islam Sabilillah', 'SMA Islam Sabilillah Boarding School'];
+                    }
+                    globalSupervisiData.forEach(d => {
+                        if (d.satuanPendidikan && d.createdByRole !== 'supervisor_lpis') {
+                            targetSatuan.push(d.satuanPendidikan);
+                        }
+                    });
+                    targetSatuan = window.getDeduplicatedSatuanList(targetSatuan, globalSupervisiData);
+                }
+            }
+            
+            const colors = [
+                'rgba(79, 70, 229, 0.8)',
+                'rgba(5, 150, 105, 0.8)',
+                'rgba(234, 88, 12, 0.8)',
+                'rgba(219, 39, 119, 0.8)',
+                'rgba(2, 132, 199, 0.8)'
+            ];
+
+            const datasets = targetSatuan.map((sat, index) => {
+                const dataValues = labels.map(dateStr => {
+                    return globalSupervisiData.filter(s => {
+                        let matchSat = window.isSameSatuan(s.satuanPendidikan, sat);
+                        if (sat === 'Temuan Supervisor LPI' || sat === 'Supervisor LPIS') {
+                            matchSat = s.createdByRole === 'supervisor_lpis' || s.satuanPendidikan === 'LPI Sabilillah' || s.satuanPendidikan === 'Supervisor LPIS' || s.satuanPendidikan === 'Temuan Supervisor LPI';
+                        }
+                        return matchSat && s.tanggal === dateStr;
+                    }).reduce((acc, curr) => acc + (curr.detailPertemuan ? curr.detailPertemuan.length : 0), 0);
+                });
+                return {
+                    label: sat,
+                    data: dataValues,
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length].replace('0.8', '0.1'),
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                };
+            });
+            
+            if (dailyChartInstance) { 
+                dailyChartInstance.destroy();
+            }
+            
+            dailyChartInstance = new Chart(ctx, { 
+                type: 'line', 
+                data: { 
+                    labels: labels.map(dateStr => {
+                        const d = new Date(dateStr);
+                        const ms = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+                        if (d.toString() === 'Invalid Date') return dateStr;
+                        return d.getDate() + ' ' + ms[d.getMonth()];
+                    }), 
+                    datasets: datasets
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: targetSatuan.length > 1, position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }, 
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+                } 
+            }); 
+        }, 50);
+    }
+
     window.loadDashboardData = function loadDashboardData() {
         if (!currentUser) return;
         const welcomeText = currentUser.namaSupervisor || (currentUser.role === 'admin' ? 'Administrator' : 'Pengguna');
@@ -1302,7 +2125,7 @@
 
             const totalT = dashData.reduce((acc, s) => acc + (s.detailPertemuan?.length || 0), 0);
             window.setText('dash-total-laporan', dashData.length); 
-            window.setText('dash-total-temuan', totalT); window.updateDashboardChart();
+            window.setText('dash-total-temuan', totalT); window.updateDashboardChart(); window.updateDailyChart();
             
             const gridContainer = document.getElementById('satuan-grid');
             if(gridContainer) {
@@ -1314,21 +2137,20 @@
                     if (listSatuan.length === 0) {
                         listSatuan.push('TK Islam Sabilillah', 'SD Islam Sabilillah', 'SMP Islam Sabilillah', 'SMA Islam Sabilillah', 'SMA Islam Sabilillah Boarding School');
                     }
+                    globalSupervisiData.forEach(d => {
+                        if (d.satuanPendidikan && d.createdByRole !== 'supervisor_lpis') {
+                            listSatuan.push(d.satuanPendidikan);
+                        }
+                    });
+                    listSatuan = window.getDeduplicatedSatuanList(listSatuan, dashData);
                 }
                 let gridHtml = '';
-                const themeColors = [
-                    { border: '#4f46e5', bg: 'linear-gradient(145deg, #ffffff 0%, #eef2ff 100%)', iconBg: 'rgba(79,70,229,0.1)' },
-                    { border: '#059669', bg: 'linear-gradient(145deg, #ffffff 0%, #ecfdf5 100%)', iconBg: 'rgba(5,150,105,0.1)' },
-                    { border: '#ea580c', bg: 'linear-gradient(145deg, #ffffff 0%, #fff7ed 100%)', iconBg: 'rgba(234,88,12,0.1)' },
-                    { border: '#db2777', bg: 'linear-gradient(145deg, #ffffff 0%, #fdf2f8 100%)', iconBg: 'rgba(219,39,119,0.1)' },
-                    { border: '#0284c7', bg: 'linear-gradient(145deg, #ffffff 0%, #f0f9ff 100%)', iconBg: 'rgba(2,132,199,0.1)' }
-                ];
-                listSatuan.forEach((sat, idx) => {
-                    const theme = themeColors[idx % themeColors.length];
-                    const satData = dashData.filter(d => d.satuanPendidikan === sat && d.createdByRole !== 'supervisor_lpis');
+                listSatuan.forEach((sat) => {
+                    const theme = window.getThemeForSatuan(sat);
+                    const satData = dashData.filter(d => window.isSameSatuan(d.satuanPendidikan, sat) && d.createdByRole !== 'supervisor_lpis');
                     const satT = satData.reduce((acc, s) => acc + (s.detailPertemuan?.length || 0), 0);
                     gridHtml += `
-                        <div class="card" style="padding: 1.25rem; background: ${theme.bg}; border-top: 4px solid ${theme.border}; position: relative; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)';">
+                        <div class="card" style="padding: 1.25rem; background: ${theme.bg}; border-top: 4px solid ${theme.border}; position: relative; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)';" onclick="window.goToRekapSatuan('${sat}')">
                             <div style="position: absolute; top: -15px; right: -15px; width: 80px; height: 80px; background: ${theme.iconBg}; border-radius: 50%;"></div>
                             <div class="font-bold text-main" style="font-size: 0.95rem; line-height: 1.3; margin-bottom: 0.85rem; display: flex; align-items: flex-start; gap: 6px; position: relative; z-index: 1;"><i class="material-icons-round" style="color: ${theme.border}; font-size: 1.15rem; margin-top: -1px;">domain</i> <span style="flex:1;">${sat}</span></div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: rgba(255,255,255,0.8); padding: 0.65rem 0.75rem; border-radius: 0.65rem; border: 1px solid rgba(0,0,0,0.06); position: relative; z-index: 1;">
@@ -1416,16 +2238,41 @@
     }
 
     // Export & Print Logic
+    window.formatTglCetak = (dateStr) => {
+        try {
+            const d = new Date(dateStr);
+            return `${d.getDate()} ${['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][d.getMonth()]} ${d.getFullYear()}`;
+        } catch (e) { return dateStr; }
+    };
+
     window.generateLaporan = () => {
-        const bln = document.getElementById('cetak-bulan').value; let filtered = globalSupervisiData;
+        const startDate = document.getElementById('cetak-start-date').value;
+        const endDate = document.getElementById('cetak-end-date').value;
+        let filtered = globalSupervisiData;
+        
         let currentSatuan = (currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') ? 'Semua Satuan Pendidikan (Rekap)' : currentUser.satuanPendidikan;
-        const satFilter = document.getElementById('cetak-satuan').value;
+        const satFilter = document.getElementById('cetak-satuan')?.value || 'Semua';
+        
         if((currentUser.role === 'admin' || currentUser.role === 'supervisor_lpis') && satFilter !== 'Semua') {
             currentSatuan = satFilter;
             filtered = filtered.filter(s => s.satuanPendidikan === satFilter);
         }
-        if(bln !== 'Semua') filtered = filtered.filter(s => s.bulan === bln);
-        window.setText('print-satuan', currentSatuan); window.setText('print-bulan-tahun', bln === 'Semua' ? `Semua Bulan ${new Date().getFullYear()}` : `${bln} ${new Date().getFullYear()}`);
+        
+        if (startDate) {
+            filtered = filtered.filter(s => new Date(s.tanggal) >= new Date(startDate));
+        }
+        if (endDate) {
+            filtered = filtered.filter(s => new Date(s.tanggal) <= new Date(endDate));
+        }
+        
+        window.setText('print-satuan', currentSatuan); 
+        
+        let rentangText = "Semua Waktu";
+        if (startDate && endDate) rentangText = `${window.formatTglCetak(startDate)} - ${window.formatTglCetak(endDate)}`;
+        else if (startDate) rentangText = `Mulai ${window.formatTglCetak(startDate)}`;
+        else if (endDate) rentangText = `Hingga ${window.formatTglCetak(endDate)}`;
+        
+        window.setText('print-bulan-tahun', rentangText);
         const tbody = document.getElementById('tbody-cetak'); tbody.innerHTML = '';
         if(filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; border: 1px solid black; padding: 10px;">Tidak ada data.</td></tr>'; } 
         else {
@@ -1640,7 +2487,9 @@
                 await setDoc(doc(db, "users", finalId), { username, password: pass, satuanPendidikan: sekolah, kepsek, nipyKepsek, kepalaTU: tu, nipyTU, role: roleInput, namaSupervisor: kepsek });
                 const cekAda = globalSettings.sekolahList.some(x => x.nama === sekolah); if(!cekAda && roleInput === 'user') { globalSettings.sekolahList.push({nama: sekolah, supervisor: kepsek}); await saveSettingsToDB(); }
             }
-            showToast(idInput ? "Data akun diperbarui!" : "Akun baru disimpan!", "success"); window.resetAkunForm(); window.loadAkunData();
+            showToast(idInput ? "Data akun diperbarui!" : "Akun baru disimpan!", "success"); 
+            window.logActivity("AKUN", idInput ? "Edit Akun User" : "Tambah Akun User", `${idInput ? 'Memperbarui' : 'Membuat'} akun ${username} (${roleInput} - ${sekolah})`);
+            window.resetAkunForm(); window.loadAkunData();
         } catch(e) { showToast("Gagal menyimpan akun", "error"); }
     };
 
@@ -1666,7 +2515,7 @@
         } catch(e) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Gagal memuat</td></tr>'; }
     };
     
-    window.deleteUser = (id) => window.showConfirmModal("Hapus Akun", "Anda yakin ingin menghapus akun ini?", async () => { try { if(IS_PREVIEW) window.mockUsers = window.mockUsers.filter(u => u.id !== id); else await deleteDoc(doc(db, "users", id)); window.loadAkunData(); showToast("Akun berhasil dihapus", "success"); } catch(e) { showToast("Gagal hapus", "error"); } });
+    window.deleteUser = (id) => window.showConfirmModal("Hapus Akun", "Anda yakin ingin menghapus akun ini?", async () => { try { if(IS_PREVIEW) window.mockUsers = window.mockUsers.filter(u => u.id !== id); else await deleteDoc(doc(db, "users", id)); window.loadAkunData(); showToast("Akun berhasil dihapus", "success"); window.logActivity("AKUN", "Hapus Akun User", `Menghapus akun ID: ${id}`); } catch(e) { showToast("Gagal hapus", "error"); } });
 
     window.loadSettings = async function loadSettings() {
         try {
@@ -1680,26 +2529,51 @@
     
     window.populateInputDropdowns = function populateInputDropdowns() {
         const [selSatuan, selTahun, filterTahun] = ['input-satuan', 'input-tahun', 'filter-rekap-tahun'].map(id => document.getElementById(id)); if(!selSatuan || !selTahun) return;
-        const [curTahun, curSatuan] = [selTahun.value, selSatuan.value];
+        
+        const curTahun = selTahun.value;
+        const curSatuan = selSatuan.value;
+        const curFilterTahun = filterTahun?.value;
+
         selTahun.innerHTML = '<option value="">-- Pilih --</option>'; filterTahun.innerHTML = '<option value="Semua">Semua Tahun</option>';
         globalSettings.tahunAjaran.forEach(th => { selTahun.innerHTML += `<option value="${th}">${th}</option>`; filterTahun.innerHTML += `<option value="${th}">${th}</option>`; });
         selSatuan.innerHTML = '<option value="">-- Pilih --</option>';
+        
         const selCetakSatuan = document.getElementById('cetak-satuan');
         const selChartSatuan = document.getElementById('chart-filter-satuan');
         const selFilterRekapSatuan = document.getElementById('filter-rekap-satuan');
+        
+        const curCetakSatuan = selCetakSatuan?.value;
+        const curChartSatuan = selChartSatuan?.value;
+        const curFilterRekapSatuan = selFilterRekapSatuan?.value;
+
         if(selCetakSatuan) selCetakSatuan.innerHTML = '<option value="Semua">-- Semua Satuan --</option><option value="Temuan Supervisor LPI">Temuan Supervisor LPI</option>';
         if(selChartSatuan) selChartSatuan.innerHTML = '<option value="Semua">Semua Satuan</option><option value="Temuan Supervisor LPI">Temuan Supervisor LPI</option>';
         if(selFilterRekapSatuan) selFilterRekapSatuan.innerHTML = '<option value="Semua">Semua Satuan</option><option value="Temuan Supervisor LPI">Temuan Supervisor LPI</option>';
-        globalSettings.sekolahList.forEach(sek => {
-            selSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
-            if(selCetakSatuan) selCetakSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
-            if(selChartSatuan) selChartSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
-            if(selFilterRekapSatuan) selFilterRekapSatuan.innerHTML += `<option value="${sek.nama}">${sek.nama}</option>`;
+        
+        let rawSchools = globalSettings.sekolahList.map(sek => sek.nama);
+        globalSupervisiData.forEach(d => {
+            if (d.satuanPendidikan && d.satuanPendidikan !== 'Temuan Supervisor LPI' && d.satuanPendidikan !== 'Supervisor LPIS') {
+                rawSchools.push(d.satuanPendidikan);
+            }
         });
+        const deduplicatedSchools = window.getDeduplicatedSatuanList(rawSchools, globalSupervisiData);
+        
+        deduplicatedSchools.forEach(schName => {
+            selSatuan.innerHTML += `<option value="${schName}">${schName}</option>`;
+            if(selCetakSatuan) selCetakSatuan.innerHTML += `<option value="${schName}">${schName}</option>`;
+            if(selChartSatuan) selChartSatuan.innerHTML += `<option value="${schName}">${schName}</option>`;
+            if(selFilterRekapSatuan) selFilterRekapSatuan.innerHTML += `<option value="${schName}">${schName}</option>`;
+        });
+        
         if(curTahun) selTahun.value = curTahun;
+        if(curFilterTahun) filterTahun.value = curFilterTahun;
+        if(curCetakSatuan && selCetakSatuan) selCetakSatuan.value = curCetakSatuan;
+        if(curChartSatuan && selChartSatuan) selChartSatuan.value = curChartSatuan;
+        if(curFilterRekapSatuan && selFilterRekapSatuan) selFilterRekapSatuan.value = curFilterRekapSatuan;
+        
         if(currentUser?.role === 'user') {
             const userSatuan = currentUser.satuanPendidikan;
-            if (userSatuan && !globalSettings.sekolahList.find(s => s.nama === userSatuan)) {
+            if (userSatuan && !deduplicatedSchools.some(s => window.isSameSatuan(s, userSatuan))) {
                 selSatuan.innerHTML += `<option value="${userSatuan}">${userSatuan}</option>`;
                 if(selCetakSatuan) selCetakSatuan.innerHTML += `<option value="${userSatuan}">${userSatuan}</option>`;
                 if(selChartSatuan) selChartSatuan.innerHTML += `<option value="${userSatuan}">${userSatuan}</option>`;
@@ -1735,8 +2609,8 @@
         }
     };
     window.autoFillBulan = () => { const t = document.getElementById('input-tanggal').value; if(t) { const d = new Date(t); if(d.toString() !== 'Invalid Date') { const ms = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; document.getElementById('input-bulan').value = ms[d.getMonth()]; } } else { document.getElementById('input-bulan').value = ''; } };
-    window.addTahunAjaran = async () => { const val = document.getElementById('setting-tahun').value; if(!globalSettings.tahunAjaran.includes(val)) { globalSettings.tahunAjaran.push(val); await window.saveSettingsToDB(); document.getElementById('setting-tahun').value = ''; } };
-    window.hapusTahunAjaran = (idx) => window.showConfirmModal("Hapus", "Yakin hapus tahun ajaran?", async () => { globalSettings.tahunAjaran.splice(idx, 1); await window.saveSettingsToDB(); });
+    window.addTahunAjaran = async () => { const val = document.getElementById('setting-tahun').value; if(!globalSettings.tahunAjaran.includes(val)) { globalSettings.tahunAjaran.push(val); await window.saveSettingsToDB(); window.logActivity("PENGATURAN", "Tambah Tahun Ajaran", `Menambahkan tahun ajaran: ${val}`); document.getElementById('setting-tahun').value = ''; } };
+    window.hapusTahunAjaran = (idx) => window.showConfirmModal("Hapus", "Yakin hapus tahun ajaran?", async () => { const oldVal = globalSettings.tahunAjaran[idx]; globalSettings.tahunAjaran.splice(idx, 1); await window.saveSettingsToDB(); window.logActivity("PENGATURAN", "Hapus Tahun Ajaran", `Menghapus tahun ajaran: ${oldVal || idx}`); });
     window.editTahunAjaran = (idx) => {
         const currentVal = globalSettings.tahunAjaran[idx];
         const modal = document.getElementById('custom-edit-modal-overlay');
@@ -1757,12 +2631,13 @@
             if (!newVal) return showToast("Tahun ajaran tidak boleh kosong!", "error");
             globalSettings.tahunAjaran[idx] = newVal;
             await window.saveSettingsToDB();
+            window.logActivity("PENGATURAN", "Edit Tahun Ajaran", `Memperbarui tahun ajaran: ${currentVal} -> ${newVal}`);
             modal.classList.add('hidden');
             showToast("Tahun ajaran berhasil diperbarui!", "success");
         };
     };
-    window.addSekolah = async () => { const n = document.getElementById('setting-sekolah').value, s = document.getElementById('setting-supervisor').value; if(!globalSettings.sekolahList.some(x => x.nama === n)) { globalSettings.sekolahList.push({nama: n, supervisor: s}); await window.saveSettingsToDB(); document.getElementById('setting-sekolah').value = ''; document.getElementById('setting-supervisor').value = '';} };
-    window.hapusSekolah = (idx) => window.showConfirmModal("Hapus", "Yakin hapus sekolah?", async () => { globalSettings.sekolahList.splice(idx, 1); await window.saveSettingsToDB(); });
+    window.addSekolah = async () => { const n = document.getElementById('setting-sekolah').value, s = document.getElementById('setting-supervisor').value; if(!globalSettings.sekolahList.some(x => x.nama === n)) { globalSettings.sekolahList.push({nama: n, supervisor: s}); await window.saveSettingsToDB(); window.logActivity("PENGATURAN", "Tambah Sekolah", `Menambahkan sekolah ${n} (Supervisor: ${s})`); document.getElementById('setting-sekolah').value = ''; document.getElementById('setting-supervisor').value = '';} };
+    window.hapusSekolah = (idx) => window.showConfirmModal("Hapus", "Yakin hapus sekolah?", async () => { const oldSpv = globalSettings.sekolahList[idx]; globalSettings.sekolahList.splice(idx, 1); await window.saveSettingsToDB(); window.logActivity("PENGATURAN", "Hapus Sekolah", `Menghapus sekolah: ${oldSpv?.nama || idx}`); });
     window.editSekolah = (idx) => {
         const current = globalSettings.sekolahList[idx];
         const modal = document.getElementById('custom-edit-modal-overlay');
@@ -1788,6 +2663,7 @@
             if (!newNama || !newSpv) return showToast("Semua bidang harus diisi!", "error");
             globalSettings.sekolahList[idx] = { nama: newNama, supervisor: newSpv };
             await window.saveSettingsToDB();
+            window.logActivity("PENGATURAN", "Edit Sekolah", `Memperbarui sekolah: ${current.nama} -> ${newNama}`);
             modal.classList.add('hidden');
             showToast("Data sekolah berhasil diperbarui!", "success");
         };
@@ -1826,7 +2702,7 @@
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js').catch(error => {
-                console.log('SW registration failed:', error);
+                console.log('SW registration failed:', error.message || 'error');
             });
         });
     }

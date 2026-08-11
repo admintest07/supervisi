@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Fungsi untuk mengecek apakah yang login adalah Admin (menggunakan Firebase Auth)
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // KOLEKSI USERS: 
+    // Bebas dibaca agar sistem bisa mencocokkan username & password saat sekolah login.
+    // Hanya admin yang diizinkan untuk membuat/menghapus/mengedit akun sekolah.
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // KOLEKSI SUPERVISI: 
+    // Bisa dibaca dan ditulis oleh semua pengguna aplikasi agar sekolah bisa mengirim laporan.
+    match /supervisi/{docId} {
+      allow read, write: if true; 
+    }
+
+    // KOLEKSI SETTINGS (Pengaturan Master): 
+    // Bebas dibaca agar menu dropdown (Tahun Ajaran & Sekolah) muncul di form.
+    // Hanya admin yang bisa mengedit datanya.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // KOLEKSI LOGS (Log Trail):
+    // Bisa dibaca dan ditulis oleh semua pengguna aplikasi agar aktivitas bisa dicatat 
+    // dan riwayat log trail bisa dimuat.
+    match /logs/{logId} {
+      allow read, write: if true;
+    }
+  }
+}
